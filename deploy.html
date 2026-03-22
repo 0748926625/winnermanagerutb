@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Déploiement Winner Express</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-green-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-rocket text-green-600 mr-2"></i>
+                    Déployez Winner Express en Ligne
+                </h1>
+                <p class="text-gray-600 text-lg">Accédez à votre tableau de bord depuis n'importe où!</p>
+            </div>
+
+            <!-- Options Grid -->
+            <div class="grid md:grid-cols-2 gap-6 mb-12">
+                <!-- Netlify Option -->
+                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                            <i class="fas fa-bolt text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Netlify</h3>
+                            <span class="text-sm text-green-600 font-semibold">Le plus simple</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">Déploiement instantané par glisser-déposer. Aucune configuration technique requise.</p>
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            Gratuit et illimité
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            SSL automatique
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            URL personnalisée
+                        </div>
+                    </div>
+                    <a href="https://app.netlify.com/drop" target="_blank" class="block w-full bg-blue-600 text-white text-center py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-external-link-alt mr-2"></i>
+                        Déployer sur Netlify
+                    </a>
+                </div>
+
+                <!-- GitHub Pages Option -->
+                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
+                            <i class="fab fa-github text-gray-800 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">GitHub Pages</h3>
+                            <span class="text-sm text-purple-600 font-semibold">Le plus professionnel</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">Intégration Git pour mises à jour faciles et contrôle de version.</p>
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            Gratuit et fiable
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            Contrôle de version
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            Mises à jour faciles
+                        </div>
+                    </div>
+                    <a href="https://pages.github.com" target="_blank" class="block w-full bg-gray-800 text-white text-center py-3 rounded-lg hover:bg-gray-900 transition-colors">
+                        <i class="fas fa-external-link-alt mr-2"></i>
+                        Déployer sur GitHub
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Start Guide -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-play-circle text-green-600 mr-2"></i>
+                    Guide Rapide - Netlify (Recommandé)
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                            <span class="text-green-600 font-bold">1</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Préparez vos fichiers</h4>
+                            <p class="text-gray-600">Assurez-vous que index.html et script.js sont dans le même dossier</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                            <span class="text-green-600 font-bold">2</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Allez sur Netlify Drop</h4>
+                            <p class="text-gray-600">Visitez <a href="https://app.netlify.com/drop" class="text-blue-600 underline" target="_blank">app.netlify.com/drop</a></p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                            <span class="text-green-600 font-bold">3</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Glissez votre dossier</h4>
+                            <p class="text-gray-600">Faites glisser le dossier "REGIONAL 2025" dans la zone indiquée</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                            <span class="text-green-600 font-bold">4</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">C'est prêt!</h4>
+                            <p class="text-gray-600">Votre site est en ligne avec une URL comme: random-name-123456.netlify.app</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Benefits -->
+            <div class="bg-gradient-to-r from-green-600 to-blue-600 rounded-xl p-8 text-white">
+                <h2 class="text-2xl font-bold mb-6">
+                    <i class="fas fa-star mr-2"></i>
+                    Avantages de l'Hébergement en Ligne
+                </h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <i class="fas fa-mobile-alt text-4xl mb-3"></i>
+                        <h3 class="font-semibold mb-2">Accès Mobile</h3>
+                        <p class="text-sm opacity-90">Utilisez votre tableau de bord sur smartphone, tablette ou ordinateur</p>
+                    </div>
+                    <div class="text-center">
+                        <i class="fas fa-users text-4xl mb-3"></i>
+                        <h3 class="font-semibold mb-2">Partage d'Équipe</h3>
+                        <p class="text-sm opacity-90">Partagez le lien avec vos collaborateurs pour un accès collaboratif</p>
+                    </div>
+                    <div class="text-center">
+                        <i class="fas fa-cloud text-4xl mb-3"></i>
+                        <h3 class="font-semibold mb-2">Disponible 24/7</h3>
+                        <p class="text-sm opacity-90">Votre site est accessible à tout moment, n'importe où dans le monde</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support -->
+            <div class="text-center mt-12">
+                <p class="text-gray-600 mb-4">Besoin d'aide pour le déploiement?</p>
+                <button onclick="window.location.href='index.html'" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Retour au Tableau de Bord
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

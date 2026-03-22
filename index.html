@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WINNER EXPRESS - Tableau de Bord</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <style>
+        :root { 
+            --primary: #10b981; 
+            --primary-dark: #059669; 
+            --secondary: #3b82f6; 
+            --danger: #ef4444; 
+            --warning: #f59e0b; 
+            --success: #22c55e;
+            --dark: #1f2937;
+            --light: #f8fafc;
+            --gray: #6b7280;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background-color: #f3f4f6; /* bg-gray-100 */
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        .glass-morphism {
+            background: white;
+            border: 1px solid #e5e7eb; /* border-gray-200 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-light {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .input-modern {
+            background-color: #f9fafb; /* bg-gray-50 */
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            color: #1f2937; /* text-gray-800 */
+            transition: all 0.3s ease;
+        }
+        
+        .input-modern:focus {
+            background-color: white;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+            outline: none;
+            color: #1f2937;
+        }
+        
+        .input-modern::placeholder {
+            color: #9ca3af; /* text-gray-400 */
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px 0 rgba(37, 99, 235, 0.4);
+        }
+        
+        .stat-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--warning));
+        }
+        
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .notification-enter {
+            animation: slideInRight 0.3s ease-out;
+        }
+        
+        .notification-exit {
+            animation: slideOutRight 0.3s ease-in;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        .chart-container {
+            background: white;
+            border: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header moderne -->
+    <header class="header-light sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <img src="logowe.jpeg" alt="Logo" class="w-12 h-12 rounded-xl shadow-lg object-cover">
+                        <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-black text-gray-800">WINNER</h1>
+                        <p class="text-sm text-gray-600 font-medium">EXPRESS</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <p class="text-sm text-gray-500">Bienvenue</p>
+                        <p class="text-gray-800 font-semibold" id="username">Admin</p>
+                    </div>
+                    <button onclick="logout()" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 hover:text-red-200 px-4 py-2 rounded-xl border border-red-500/30 transition-all duration-300">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        <span class="hidden sm:inline">Déconnexion</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Formulaire principal -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Carte de saisie -->
+                <div class="glass-morphism rounded-2xl p-8 card-hover">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                            <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-truck text-white text-sm"></i>
+                            </div>
+                            Saisie Journalière
+                        </h2>
+                        <div class="flex items-center space-x-3">
+                            <label class="text-gray-600 text-sm font-medium">Date</label>
+                            <input type="date" id="workingDateSelector" class="input-modern px-4 py-2 rounded-lg w-40">
+                        </div>
+                    </div>
+
+                    <!-- Section Livraisons -->
+                    <div class="space-y-4 mb-8">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center mb-4">
+                            <div class="w-6 h-6 bg-gradient-to-br from-green-400 to-emerald-600 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-box text-white text-xs"></i>
+                            </div>
+                            Livraisons et Marges
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                                    <label class="text-gray-800 font-bold">1000 FCFA</label>
+                                    <div class="flex space-x-2">
+                                        <div class="flex flex-col items-center">
+                                            <span class="text-xs text-gray-500 mb-1">Livrés</span>
+                                            <input type="number" id="liv-1000" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0">
+                                        </div>
+                                        <div class="flex flex-col items-center">
+                                            <span class="text-xs text-gray-500 mb-1">Échecs</span>
+                                            <input type="number" id="ech-1000" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                                    <label class="text-gray-800 font-bold">1500 FCFA</label>
+                                    <div class="flex space-x-2">
+                                        <div class="flex flex-col items-center">
+                                            <span class="text-xs text-gray-500 mb-1">Livrés</span>
+                                            <input type="number" id="liv-1500" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0">
+                                        </div>
+                                        <div class="flex flex-col items-center">
+                                            <span class="text-xs text-gray-500 mb-1">Échecs</span>
+                                            <input type="number" id="ech-1500" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                                    <label class="text-gray-800 font-bold">2000 FCFA</label>
+                                    <div class="flex space-x-2">
+                                        <div class="flex flex-col items-center">
+                                            <span class="text-xs text-gray-500 mb-1">Livrés</span>
+                                            <input type="number" id="liv-2000" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0">
+                                        </div>
+                                        <div class="flex flex-col items-center">
+                                            <span class="text-xs text-gray-500 mb-1">Échecs</span>
+                                            <input type="number" id="ech-2000" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                                    <label class="text-gray-800 font-bold">2500 FCFA</label>
+                                    <div class="flex space-x-2">
+                                        <div class="flex flex-col items-center">
+                                            <span class="text-xs text-gray-500 mb-1">Livrés</span>
+                                            <input type="number" id="liv-2500" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0">
+                                        </div>
+                                        <div class="flex flex-col items-center">
+                                            <span class="text-xs text-gray-500 mb-1">Échecs</span>
+                                            <input type="number" id="ech-2500" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 rounded-xl bg-blue-50 border border-blue-200 group transition-all">
+                                    <label class="text-blue-800 text-sm font-medium">Marge 1000</label>
+                                    <div class="flex flex-col items-center">
+                                        <span class="text-xs text-blue-600/70 mb-1">Taux %</span>
+                                        <input type="number" id="mar-1000" class="input-modern w-24 p-2 rounded-lg text-center" value="75">
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 rounded-xl bg-blue-50 border border-blue-200 group transition-all">
+                                    <label class="text-blue-800 text-sm font-medium">Marge 1500</label>
+                                    <div class="flex flex-col items-center">
+                                        <span class="text-xs text-blue-600/70 mb-1">Taux %</span>
+                                        <input type="number" id="mar-1500" class="input-modern w-24 p-2 rounded-lg text-center" value="75">
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 rounded-xl bg-blue-50 border border-blue-200 group transition-all">
+                                    <label class="text-blue-800 text-sm font-medium">Marge 2000</label>
+                                    <div class="flex flex-col items-center">
+                                        <span class="text-xs text-blue-600/70 mb-1">Taux %</span>
+                                        <input type="number" id="mar-2000" class="input-modern w-24 p-2 rounded-lg text-center" value="75">
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 rounded-xl bg-blue-50 border border-blue-200 group transition-all">
+                                    <label class="text-blue-800 text-sm font-medium">Marge 2500</label>
+                                    <div class="flex flex-col items-center">
+                                        <span class="text-xs text-blue-600/70 mb-1">Taux %</span>
+                                        <input type="number" id="mar-2500" class="input-modern w-24 p-2 rounded-lg text-center" value="75">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Dépenses -->
+                    <div class="space-y-4 mb-8">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center mb-4">
+                            <div class="w-6 h-6 bg-gradient-to-br from-red-400 to-pink-600 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-coins text-white text-xs"></i>
+                            </div>
+                            Dépenses Fixes
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                                <label class="text-gray-700 text-sm font-medium">Carburant (L)</label>
+                                <input type="number" id="dep-car-l" class="input-modern w-24 p-2 rounded-lg text-center" placeholder="Litres">
+                            </div>
+                            <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                                <label class="text-gray-700 text-sm font-medium">Coût Carburant</label>
+                                <input type="number" id="dep-car-f" class="input-modern w-28 p-2 rounded-lg text-center" placeholder="FCFA">
+                            </div>
+                            <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                                <label class="text-gray-700 text-sm font-medium">Maintenance</label>
+                                <input type="number" id="dep-maint" class="input-modern w-28 p-2 rounded-lg text-center" placeholder="FCFA">
+                            </div>
+                            <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                                <label class="text-gray-700 text-sm font-medium">Autres Fixes</label>
+                                <input type="number" id="dep-fixes" class="input-modern w-28 p-2 rounded-lg text-center" placeholder="FCFA">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Dépenses diverses -->
+                    <div class="space-y-3 mb-8">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                <div class="w-6 h-6 bg-gradient-to-br from-orange-400 to-yellow-600 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-receipt text-white text-xs"></i>
+                                </div>
+                                Dépenses Diverses
+                            </h3>
+                            <button onclick="dashboard.addDiversRow()" class="btn-primary text-white px-4 py-2 rounded-xl text-sm font-medium">
+                                <i class="fas fa-plus mr-2"></i>
+                                Ajouter une dépense
+                            </button>
+                        </div>
+                        <div id="divers-container" class="space-y-2"></div>
+                    </div>
+
+                    <!-- Section Observations -->
+                    <div class="space-y-3">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center mb-3">
+                            <div class="w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-sticky-note text-white text-xs"></i>
+                            </div>
+                            Observations
+                        </h3>
+                        <textarea id="obs-text" class="input-modern w-full h-24 p-4 rounded-xl resize-none" placeholder="Observations / Remarques importantes..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne de droite -->
+            <div class="space-y-6">
+                <!-- Carte Statistiques -->
+                <div class="stat-card rounded-2xl p-6 card-hover">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-400 to-indigo-600 rounded-lg flex items-center justify-center mr-3 animate-float">
+                            <i class="fas fa-chart-line text-white text-sm"></i>
+                        </div>
+                        Résumé du Jour
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50">
+                            <span class="text-gray-600 text-sm font-medium">Total Livraisons</span>
+                            <span id="stat-total-liv" class="text-gray-800 font-bold text-lg">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50">
+                            <span class="text-gray-600 text-sm font-medium">Échouées</span>
+                            <span id="stat-echouees" class="text-red-600 font-bold text-lg">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50">
+                            <span class="text-gray-600 text-sm font-medium">Réussies</span>
+                            <span id="stat-reussies" class="text-green-600 font-bold text-lg">0</span>
+                        </div>
+                        <div class="border-t border-gray-200 pt-4 space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm font-medium">Recettes Brutes</span>
+                                <span id="stat-brut" class="text-gray-800 font-bold text-lg">0 FCFA</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm font-medium">Recettes Nettes</span>
+                                <span id="stat-net" class="text-blue-600 font-bold text-lg">0 FCFA</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carte Bilan -->
+                <div class="stat-card rounded-2xl p-6 card-hover sticky top-24">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <div class="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-600 rounded-lg flex items-center justify-center mr-3 animate-float">
+                            <i class="fas fa-balance-scale text-white text-sm"></i>
+                        </div>
+                        Bilan du Jour
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3 border-t border-gray-200 pt-4">
+                            <div class="text-left">
+                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Nettes</p>
+                                <p id="bilan-recettes" class="text-blue-600 font-bold text-lg">0 FCFA</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Dépenses</p>
+                                <p id="bilan-depenses" class="text-red-600 font-bold text-lg">0 FCFA</p>
+                            </div>
+                        </div>
+                        <div class="border-t border-gray-200 pt-4">
+                            <div class="text-center">
+                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Balance</p>
+                                <p id="bilan-balance" class="text-3xl font-black rounded-xl py-3 bg-green-100 text-green-700">0 FCFA</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="space-y-3">
+                    <button onclick="dashboard.saveWithSync()" class="btn-primary w-full text-white py-4 rounded-xl font-bold text-lg shadow-xl">
+                        <i class="fas fa-cloud-upload-alt mr-3"></i>
+                        SAUVEGARDER & SYNC
+                    </button>
+                    <button onclick="dashboard.exportReport()" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white py-4 rounded-xl font-bold text-lg shadow-xl transition-all duration-300 hover:scale-105">
+                        <i class="fas fa-file-invoice mr-3"></i>
+                        RAPPORT COMPLET
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Section Graphique moderne -->
+    <div class="container mx-auto px-6 pb-8">
+        <div class="glass-morphism rounded-2xl p-8 card-hover">
+            <div class="flex flex-col lg:flex-row justify-between items-center mb-6 gap-4">
+                <h3 class="text-xl font-bold text-gray-800 flex items-center self-start lg:self-center">
+                    <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center mr-3">
+                        <i class="fas fa-chart-area text-white"></i>
+                    </div>
+                    Évolution
+                </h3>
+                
+                <div class="flex flex-wrap items-center gap-2 bg-gray-100 p-1 rounded-xl">
+                    <button id="btn-chart-week" onclick="dashboard.updateChartPeriod('week')" class="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-white transition-colors">Semaine</button>
+                    <button id="btn-chart-month" onclick="dashboard.updateChartPeriod('month')" class="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-white transition-colors">Mois</button>
+                    <button id="btn-chart-custom" onclick="toggleCustomDate()" class="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-white transition-colors">Période</button>
+                </div>
+
+                <div id="custom-date-range" class="hidden flex items-center gap-2 bg-gray-100 p-2 rounded-xl border border-gray-200">
+                    <input type="date" id="chart-start" class="input-modern text-xs px-2 py-1">
+                    <span class="text-gray-400">-</span>
+                    <input type="date" id="chart-end" class="input-modern text-xs px-2 py-1">
+                    <button onclick="dashboard.updateChartPeriod('custom')" class="bg-blue-500 hover:bg-blue-600 text-white rounded px-2 py-1 text-xs">
+                        OK
+                    </button>
+                </div>
+            </div>
+            <div class="chart-container rounded-xl" style="height: 350px; position: relative;">
+                <canvas id="mainEvolutionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if(sessionStorage.getItem('authenticated') !== 'true') window.location.href='login.html';
+            window.dashboard = new DeliveryDashboard();
+        });
+        function toggleCustomDate() {
+            const el = document.getElementById('custom-date-range');
+            el.classList.toggle('hidden');
+        }
+        function logout() { sessionStorage.clear(); window.location.href='login.html'; }
+    </script>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WINNER EXPRESS - Graphiques d'Évolution</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // S'assurer que Chart.js est bien chargé
+        window.addEventListener('load', function() {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js ne s\'est pas chargé correctement');
+                // Charger Chart.js manuellement si nécessaire
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js';
+                document.head.appendChild(script);
+            }
+        });
+    </script>
+    <style>
+        :root {
+            --dark-green: #064e3b;
+            --light-green: #10b981;
+            --light-blue: #93c5fd;
+            --dark-blue: #1e40af;
+            --light-orange: #fed7aa;
+            --dark-orange: #ea580c;
+        }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f3f4f6; /* bg-gray-100 */
+            color: #1f2937; /* text-gray-800 */
+            min-height: 100vh;
+        }
+        
+        .header-bg {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+        }
+        
+        .glass-effect {
+            background: white;
+            border: 1px solid #e5e7eb; /* border-gray-200 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .input-field {
+            border: 1px solid #d1d5db;
+            transition: all 0.2s;
+        }
+        
+        .input-field:focus {
+            border-color: var(--dark-green);
+            box-shadow: 0 0 0 2px var(--dark-green);
+            outline: none;
+        }
+        
+        .animate-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Styles pour les notifications */
+        .notification-enter {
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .notification-exit {
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="header-bg text-gray-800 py-6 px-8 shadow-md">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <img src="logowe.jpeg" alt="Winner Express Logo" class="w-12 h-12 rounded-lg shadow-lg object-cover">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">WINNER EXPRESS</h1>
+                    <p class="text-sm text-gray-600">Graphiques d'Évolution</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-6">
+                <span class="text-sm text-gray-600">Graphiques d'Évolution</span>
+                <a href="index.html" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors text-gray-700">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Retour au Tableau de Bord
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-8 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="glass-effect rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Total Recettes</p>
+                        <p class="text-2xl font-bold text-green-600" id="total-recettes">0 FCFA</p>
+                    </div>
+                    <div class="bg-green-500/20 p-3 rounded-lg">
+                        <i class="fas fa-arrow-up text-xl text-green-400"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-effect rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Total Livraisons</p>
+                        <p class="text-2xl font-bold text-blue-600" id="total-livraisons-stats">0</p>
+                    </div>
+                    <div class="bg-blue-500/20 p-3 rounded-lg">
+                        <i class="fas fa-truck text-xl text-blue-400"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-effect rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Total Dépenses</p>
+                        <p class="text-2xl font-bold text-red-600" id="total-depenses">0 FCFA</p>
+                    </div>
+                    <div class="bg-red-500/20 p-3 rounded-lg">
+                        <i class="fas fa-arrow-down text-xl text-red-400"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-effect rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Balance Totale</p>
+                        <p class="text-2xl font-bold text-purple-600" id="balance-totale">0 FCFA</p>
+                    </div>
+                    <div class="bg-purple-500/20 p-3 rounded-lg">
+                        <i class="fas fa-balance-scale text-xl text-purple-400"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Graphique des Recettes -->
+            <div class="glass-effect rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-chart-line text-green-400 mr-2"></i>
+                    Évolution des Recettes
+                </h3>
+                <div class="chart-container">
+                    <canvas id="recettesChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Graphique des Livraisons -->
+            <div class="glass-effect rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-chart-bar text-blue-400 mr-2"></i>
+                    Évolution des Livraisons
+                </h3>
+                <div class="chart-container">
+                    <canvas id="livraisonsChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Graphique de la Balance -->
+            <div class="glass-effect rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-balance-scale text-purple-400 mr-2"></i>
+                    Évolution de la Balance
+                </h3>
+                <div class="chart-container">
+                    <canvas id="balanceChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Graphique des Dépenses -->
+            <div class="glass-effect rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-chart-line text-red-400 mr-2"></i>
+                    Évolution des Dépenses
+                </h3>
+                <div class="chart-container">
+                    <canvas id="depensesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="glass-effect rounded-xl shadow-xl p-6">
+            <div class="flex justify-center space-x-6">
+                <button onclick="clearChartData()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center">
+                    <i class="fas fa-trash mr-2"></i>
+                    Effacer les données
+                </button>
+                <button onclick="exportChartData()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                    <i class="fas fa-download mr-2"></i>
+                    Exporter en CSV
+                </button>
+                <button onclick="refreshCharts()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Actualiser
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        // Vérifier l'authentification
+        function checkAuth() {
+            const isAuthenticated = sessionStorage.getItem('authenticated');
+            if (isAuthenticated !== 'true') {
+                window.location.href = 'login.html';
+                return false;
+            }
+        }
+
+        // Se déconnecter
+        function logout() {
+            sessionStorage.removeItem('authenticated');
+            sessionStorage.removeItem('username');
+            window.location.href = 'login.html';
+        }
+
+        // Vérifier l'authentification au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+        });
+
+        // Fonctions spécifiques à la page des graphiques
+        function refreshCharts() {
+            if (dashboard) {
+                dashboard.loadChartData();
+                updateStats();
+            }
+        }
+
+        function updateStats() {
+            const savedData = localStorage.getItem('deliveryChartData');
+            if (savedData) {
+                const chartData = JSON.parse(savedData);
+                
+                // Calculer les totaux
+                const totalRecettes = chartData.recettes.reduce((a, b) => a + b, 0);
+                const totalLivraisons = chartData.livraisons.reduce((a, b) => a + b, 0);
+                const totalDepenses = chartData.depenses.reduce((a, b) => a + b, 0);
+                const balanceTotale = totalRecettes - totalDepenses;
+                
+                // Mettre à jour l'affichage
+                document.getElementById('total-recettes').textContent = formatCurrency(totalRecettes);
+                document.getElementById('total-livraisons-stats').textContent = totalLivraisons.toLocaleString('fr-FR');
+                document.getElementById('total-depenses').textContent = formatCurrency(totalDepenses);
+                document.getElementById('balance-totale').textContent = formatCurrency(balanceTotale);
+            }
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('fr-FR', {
+                style: 'currency',
+                currency: 'XOF',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value).replace('XOF', 'FCFA');
+        }
+
+        function clearChartData() {
+            if (confirm('Êtes-vous sûr de vouloir effacer toutes les données des graphiques ?')) {
+                localStorage.removeItem('deliveryChartData');
+                
+                // Détruire les graphiques existants
+                if (window.recettesChart) window.recettesChart.destroy();
+                if (window.livraisonsChart) window.livraisonsChart.destroy();
+                if (window.balanceChart) window.balanceChart.destroy();
+                if (window.depensesChart) window.depensesChart.destroy();
+                
+                // Réinitialiser les statistiques
+                document.getElementById('total-recettes').textContent = '0 FCFA';
+                document.getElementById('total-livraisons-stats').textContent = '0';
+                document.getElementById('total-depenses').textContent = '0 FCFA';
+                document.getElementById('balance-totale').textContent = '0 FCFA';
+                
+                alert('Données des graphiques effacées avec succès');
+            }
+        }
+
+        function exportChartData() {
+            const savedData = localStorage.getItem('deliveryChartData');
+            if (!savedData) {
+                alert('Aucune donnée à exporter');
+                return;
+            }
+            
+            const chartData = JSON.parse(savedData);
+            
+            // Créer le contenu CSV
+            let csvContent = "Date,Recettes (FCFA),Livraisons,Dépenses (FCFA),Balance (FCFA)\n";
+            
+            for (let i = 0; i < chartData.dates.length; i++) {
+                csvContent += `${chartData.dates[i]},${chartData.recettes[i]},${chartData.livraisons[i]},${chartData.depenses[i]},${chartData.balances[i]}\n`;
+            }
+            
+            // Créer et télécharger le fichier CSV
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Winner_Express_Charts_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Attendre que dashboard soit chargé et initialiser les graphiques
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            
+            // Attendre que Chart.js soit bien chargé
+            const waitForChartJS = () => {
+                if (typeof Chart !== 'undefined') {
+                    console.log('Chart.js est maintenant disponible');
+                    
+                    // Attendre un peu plus longtemps que dashboard soit initialisé
+                    setTimeout(() => {
+                        console.log('Initialisation des graphiques...');
+                        if (window.dashboard) {
+                            console.log('Dashboard trouvé, chargement des données...');
+                            window.dashboard.loadChartData();
+                            updateStats();
+                        } else {
+                            console.error('Dashboard non trouvé!');
+                            // Créer une instance de dashboard si elle n'existe pas
+                            window.dashboard = new DeliveryDashboard();
+                            setTimeout(() => {
+                                window.dashboard.loadChartData();
+                                updateStats();
+                            }, 1000);
+                        }
+                    }, 1500);
+                } else {
+                    console.log('En attente de Chart.js...');
+                    setTimeout(waitForChartJS, 500);
+                }
+            };
+            
+            waitForChartJS();
+        });
+    </script>
+</body>
+</html>
