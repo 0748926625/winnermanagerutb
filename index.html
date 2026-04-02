@@ -11,6 +11,18 @@
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey:            "AIzaSyDEOVQ7Zctxm-e-uckUNopUUHKL8iQ51bk",
+        authDomain:        "winnergestionutb.firebaseapp.com",
+        projectId:         "winnergestionutb",
+        storageBucket:     "winnergestionutb.firebasestorage.app",
+        messagingSenderId: "487787959913",
+        appId:             "1:487787959913:web:69e58c00ee51152f0cb4f8",
+        measurementId:     "G-BP2WPS1DW8"
+      };
+      firebase.initializeApp(firebaseConfig);
+    </script>
     <style>
         :root { 
             --primary: #10b981; 
@@ -191,6 +203,10 @@
             </div>
         </div>
     </header>
+    <!-- Bandeau UTB -->
+    <div style="background:#7c3aed;padding:6px 0;text-align:center;">
+      <span style="color:#fff;font-size:1.1em;font-weight:900;letter-spacing:0.18em;">UTB</span>
+    </div>
 
     <main class="container mx-auto px-6 py-8">
         <div class="grid lg:grid-cols-3 gap-8">
@@ -279,28 +295,28 @@
                                     <label class="text-blue-800 text-sm font-medium">Marge 1000</label>
                                     <div class="flex flex-col items-center">
                                         <span class="text-xs text-blue-600/70 mb-1">Taux %</span>
-                                        <input type="number" id="mar-1000" class="input-modern w-24 p-2 rounded-lg text-center" value="75">
+                                        <input type="number" id="mar-1000" class="input-modern w-24 p-2 rounded-lg text-center" value="60">
                                     </div>
                                 </div>
                                 <div class="flex justify-between items-center p-3 rounded-xl bg-blue-50 border border-blue-200 group transition-all">
                                     <label class="text-blue-800 text-sm font-medium">Marge 1500</label>
                                     <div class="flex flex-col items-center">
                                         <span class="text-xs text-blue-600/70 mb-1">Taux %</span>
-                                        <input type="number" id="mar-1500" class="input-modern w-24 p-2 rounded-lg text-center" value="75">
+                                        <input type="number" id="mar-1500" class="input-modern w-24 p-2 rounded-lg text-center" value="60">
                                     </div>
                                 </div>
                                 <div class="flex justify-between items-center p-3 rounded-xl bg-blue-50 border border-blue-200 group transition-all">
                                     <label class="text-blue-800 text-sm font-medium">Marge 2000</label>
                                     <div class="flex flex-col items-center">
                                         <span class="text-xs text-blue-600/70 mb-1">Taux %</span>
-                                        <input type="number" id="mar-2000" class="input-modern w-24 p-2 rounded-lg text-center" value="75">
+                                        <input type="number" id="mar-2000" class="input-modern w-24 p-2 rounded-lg text-center" value="60">
                                     </div>
                                 </div>
                                 <div class="flex justify-between items-center p-3 rounded-xl bg-blue-50 border border-blue-200 group transition-all">
                                     <label class="text-blue-800 text-sm font-medium">Marge 2500</label>
                                     <div class="flex flex-col items-center">
                                         <span class="text-xs text-blue-600/70 mb-1">Taux %</span>
-                                        <input type="number" id="mar-2500" class="input-modern w-24 p-2 rounded-lg text-center" value="75">
+                                        <input type="number" id="mar-2500" class="input-modern w-24 p-2 rounded-lg text-center" value="60">
                                     </div>
                                 </div>
                             </div>
@@ -494,4 +510,3 @@
     </script>
 </body>
 </html>
-
