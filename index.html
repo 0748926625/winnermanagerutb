@@ -216,7 +216,7 @@
     </div>
 
     <!-- Panel WINNER EXPRESS -->
-    <div class="client-panel active" id="panel-we">
+    <div class="client-panel" id="panel-we" style="display:block">
     <main class="container mx-auto px-6 py-8">
         <div class="grid lg:grid-cols-3 gap-8">
             <!-- Formulaire principal -->
@@ -507,7 +507,7 @@
     </div><!-- /panel-we -->
 
     <!-- ══ PANEL UTB ══════════════════════════════════════════ -->
-    <div class="client-panel" id="panel-utb">
+    <div class="client-panel" id="panel-utb" style="display:none">
       <div class="utb-banner">UTB</div>
       <main class="container mx-auto px-6 py-8">
         <div class="grid lg:grid-cols-3 gap-8">
@@ -669,26 +669,18 @@
 
     <script src="script.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if(sessionStorage.getItem('authenticated') !== 'true') window.location.href='login.html';
-            window.dashboard = new DeliveryDashboard();
-        });
-        function toggleCustomDate() {
-            const el = document.getElementById('custom-date-range');
-            el.classList.toggle('hidden');
+        /* ══ SWITCH ONGLETS ══════════════════════════════════ */
+        function switchClient(c) {
+            document.querySelectorAll('.client-panel').forEach(function(p) {
+                p.style.display = 'none';
+            });
+            document.querySelectorAll('.client-tab').forEach(function(t) {
+                t.classList.remove('active-we','active-utb');
+            });
+            document.getElementById('panel-' + c).style.display = 'block';
+            document.getElementById('tab-' + c).classList.add('active-' + c);
+            if (c === 'utb') utbLoadDate(document.getElementById('utb-date').value);
         }
-        function logout() { sessionStorage.clear(); window.location.href='login.html'; }
-    </script>
-
-    <script>
-    /* ══ SWITCH ONGLETS ══════════════════════════════════════ */
-    function switchClient(c) {
-        document.querySelectorAll('.client-panel').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.client-tab').forEach(t => t.classList.remove('active-we','active-utb'));
-        document.getElementById('panel-' + c).classList.add('active');
-        document.getElementById('tab-' + c).classList.add('active-' + c);
-        if (c === 'utb') utbLoadDate(document.getElementById('utb-date').value);
-    }
 
     /* ══ HELPERS UTB ════════════════════════════════════════= */
     const utbN  = id => parseFloat(document.getElementById(id)?.value) || 0;
@@ -807,23 +799,21 @@
     function utbExport() {
         const date = document.getElementById('utb-date').value;
         const s = utbCalc();
-        let txt = 'RAPPORT UTB
-' + '='.repeat(36) + '
-';
-        txt += 'Date : ' + date + '
-
-';
-        txt += 'Livraisons réussies : ' + (s.totLiv-s.totEch) + '
-';
-        txt += 'Recettes nettes     : ' + utbFmt(s.net) + '
-';
-        txt += 'Total dépenses      : ' + utbFmt(s.dep) + '
-';
-        txt += 'Bénéfice net        : ' + utbFmt(s.ben) + '
-';
-        const a = Object.assign(document.createElement('a'),{
-            href: URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'})),
-            download: 'rapport_utb_'+date+'.txt'
+        const sep = String.fromCharCode(10);
+        const lines = [
+            'RAPPORT UTB',
+            '=====================================',
+            'Date : ' + date,
+            '',
+            'Livraisons reussies : ' + (s.totLiv - s.totEch),
+            'Recettes nettes     : ' + utbFmt(s.net),
+            'Total depenses      : ' + utbFmt(s.dep),
+            'Benefice net        : ' + utbFmt(s.ben)
+        ];
+        const txt = lines.join(sep);
+        const a = Object.assign(document.createElement('a'), {
+            href: URL.createObjectURL(new Blob([txt], {type: 'text/plain;charset=utf-8'})),
+            download: 'rapport_utb_' + date + '.txt'
         });
         a.click();
     }
