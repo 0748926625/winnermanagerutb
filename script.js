@@ -1,12 +1,12 @@
-// Configuration Firebase
+// Configuration Firebase — UTB
 const firebaseConfig = {
-    apiKey: "AIzaSyAwQhUFlZWTGebL2c5RB6OF9m95Wwut4Ck",
-    authDomain: "winner-express.firebaseapp.com",
-    projectId: "winner-express",
-    storageBucket: "winner-express.firebasestorage.app",
-    messagingSenderId: "619154248559",
-    appId: "1:619154248559:web:14f85763a9c4d55cdece9a",
-    measurementId: "G-D3HTJYJESF"
+    apiKey:            "AIzaSyDEOVQ7Zctxm-e-uckUNopUUHKL8iQ51bk",
+    authDomain:        "winnergestionutb.firebaseapp.com",
+    projectId:         "winnergestionutb",
+    storageBucket:     "winnergestionutb.firebasestorage.app",
+    messagingSenderId: "487787959913",
+    appId:             "1:487787959913:web:69e58c00ee51152f0cb4f8",
+    measurementId:     "G-BP2WPS1DW8"
 };
 
 // Initialiser Firebase
