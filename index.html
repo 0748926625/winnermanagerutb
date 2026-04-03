@@ -158,10 +158,17 @@
             to { transform: translateX(100%); opacity: 0; }
         }
         
-        .chart-container {
-            background: white;
-            border: 1px solid #e5e7eb;
-        }
+        .chart-container { background:white; border:1px solid #e5e7eb; }
+
+        /* ─── ONGLETS CLIENTS ─── */
+        .client-tabs { display:flex; background:#fff; border-bottom:2px solid #e5e7eb; padding:0 24px; gap:4px; position:sticky; top:72px; z-index:40; }
+        .client-tab { padding:12px 24px; cursor:pointer; font-weight:700; font-size:.9em; border-bottom:3px solid transparent; margin-bottom:-2px; transition:all .2s; display:flex; align-items:center; gap:8px; color:#6b7280; }
+        .client-tab:hover { color:#374151; }
+        .client-tab.active-we  { color:#10b981; border-bottom-color:#10b981; }
+        .client-tab.active-utb { color:#7c3aed; border-bottom-color:#7c3aed; }
+        .client-panel { display:none; }
+        .client-panel.active  { display:block; }
+        .utb-banner { background:#7c3aed; color:#fff; text-align:center; padding:6px 0; font-weight:900; letter-spacing:.2em; font-size:1em; }
     </style>
 </head>
 <body>
@@ -197,6 +204,19 @@
       <span style="color:#fff;font-size:1.1em;font-weight:900;letter-spacing:0.18em;">UTB</span>
     </div>
 
+
+    <!-- Onglets Clients -->
+    <div class="client-tabs">
+        <div class="client-tab active-we" id="tab-we" onclick="switchClient('we')">
+            <i class="fas fa-truck"></i>&nbsp; WINNER EXPRESS
+        </div>
+        <div class="client-tab" id="tab-utb" onclick="switchClient('utb')">
+            <i class="fas fa-building"></i>&nbsp; Autres Clients (UTB)
+        </div>
+    </div>
+
+    <!-- Panel WINNER EXPRESS -->
+    <div class="client-panel active" id="panel-we">
     <main class="container mx-auto px-6 py-8">
         <div class="grid lg:grid-cols-3 gap-8">
             <!-- Formulaire principal -->
@@ -451,7 +471,170 @@
                 </div>
             </div>
         </div>
+
     </main>
+    </div><!-- /panel-we -->
+
+    <!-- ══ PANEL UTB ══════════════════════════════════════════ -->
+    <div class="client-panel" id="panel-utb">
+      <div class="utb-banner">UTB</div>
+      <main class="container mx-auto px-6 py-8">
+        <div class="grid lg:grid-cols-3 gap-8">
+
+          <!-- Formulaire UTB -->
+          <div class="lg:col-span-2 space-y-6">
+            <div class="glass-morphism rounded-2xl p-8 card-hover">
+              <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3" style="background:linear-gradient(135deg,#7c3aed,#5b21b6)">
+                    <i class="fas fa-truck text-white text-sm"></i>
+                  </div>
+                  Saisie Journalière — UTB
+                </h2>
+                <div class="flex items-center space-x-3">
+                  <label class="text-gray-600 text-sm font-medium">Date</label>
+                  <input type="date" id="utb-date" class="input-modern px-4 py-2 rounded-lg w-40">
+                </div>
+              </div>
+
+              <!-- Livraisons + Marges UTB -->
+              <h3 class="text-lg font-semibold text-gray-800 flex items-center mb-4">
+                <div class="w-6 h-6 rounded-lg flex items-center justify-center mr-3" style="background:linear-gradient(135deg,#7c3aed,#5b21b6)">
+                  <i class="fas fa-box text-white text-xs"></i>
+                </div>
+                Livraisons et Marges
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="space-y-3">
+                  <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50">
+                    <label class="text-gray-800 font-bold">1000 FCFA</label>
+                    <div class="flex space-x-2">
+                      <div class="flex flex-col items-center"><span class="text-xs text-gray-500 mb-1">Livrés</span><input type="number" id="utb-liv-1000" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0"></div>
+                      <div class="flex flex-col items-center"><span class="text-xs text-gray-500 mb-1">Échecs</span><input type="number" id="utb-ech-1000" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0"></div>
+                    </div>
+                  </div>
+                  <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50">
+                    <label class="text-gray-800 font-bold">1500 FCFA</label>
+                    <div class="flex space-x-2">
+                      <div class="flex flex-col items-center"><span class="text-xs text-gray-500 mb-1">Livrés</span><input type="number" id="utb-liv-1500" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0"></div>
+                      <div class="flex flex-col items-center"><span class="text-xs text-gray-500 mb-1">Échecs</span><input type="number" id="utb-ech-1500" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0"></div>
+                    </div>
+                  </div>
+                  <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50">
+                    <label class="text-gray-800 font-bold">2000 FCFA</label>
+                    <div class="flex space-x-2">
+                      <div class="flex flex-col items-center"><span class="text-xs text-gray-500 mb-1">Livrés</span><input type="number" id="utb-liv-2000" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0"></div>
+                      <div class="flex flex-col items-center"><span class="text-xs text-gray-500 mb-1">Échecs</span><input type="number" id="utb-ech-2000" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0"></div>
+                    </div>
+                  </div>
+                  <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50">
+                    <label class="text-gray-800 font-bold">2500 FCFA</label>
+                    <div class="flex space-x-2">
+                      <div class="flex flex-col items-center"><span class="text-xs text-gray-500 mb-1">Livrés</span><input type="number" id="utb-liv-2500" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0"></div>
+                      <div class="flex flex-col items-center"><span class="text-xs text-gray-500 mb-1">Échecs</span><input type="number" id="utb-ech-2500" class="input-modern w-16 p-2 rounded-lg text-center" placeholder="0"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="space-y-3">
+                  <div class="flex justify-between items-center p-3 rounded-xl bg-purple-50 border border-purple-200">
+                    <label class="text-purple-800 text-sm font-medium">Marge 1000</label>
+                    <div class="flex flex-col items-center"><span class="text-xs text-purple-500 mb-1">Taux %</span><input type="number" id="utb-mar-1000" class="input-modern w-24 p-2 rounded-lg text-center" value="60"></div>
+                  </div>
+                  <div class="flex justify-between items-center p-3 rounded-xl bg-purple-50 border border-purple-200">
+                    <label class="text-purple-800 text-sm font-medium">Marge 1500</label>
+                    <div class="flex flex-col items-center"><span class="text-xs text-purple-500 mb-1">Taux %</span><input type="number" id="utb-mar-1500" class="input-modern w-24 p-2 rounded-lg text-center" value="60"></div>
+                  </div>
+                  <div class="flex justify-between items-center p-3 rounded-xl bg-purple-50 border border-purple-200">
+                    <label class="text-purple-800 text-sm font-medium">Marge 2000</label>
+                    <div class="flex flex-col items-center"><span class="text-xs text-purple-500 mb-1">Taux %</span><input type="number" id="utb-mar-2000" class="input-modern w-24 p-2 rounded-lg text-center" value="60"></div>
+                  </div>
+                  <div class="flex justify-between items-center p-3 rounded-xl bg-purple-50 border border-purple-200">
+                    <label class="text-purple-800 text-sm font-medium">Marge 2500</label>
+                    <div class="flex flex-col items-center"><span class="text-xs text-purple-500 mb-1">Taux %</span><input type="number" id="utb-mar-2500" class="input-modern w-24 p-2 rounded-lg text-center" value="60"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dépenses fixes UTB -->
+              <h3 class="text-lg font-semibold text-gray-800 flex items-center mb-4">
+                <div class="w-6 h-6 bg-gradient-to-br from-red-400 to-pink-600 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-coins text-white text-xs"></i></div>
+                Dépenses Fixes
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50"><label class="text-gray-700 text-sm font-medium">Carburant (L)</label><input type="number" id="utb-dep-car-l" class="input-modern w-24 p-2 rounded-lg text-center" placeholder="Litres"></div>
+                <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50"><label class="text-gray-700 text-sm font-medium">Coût Carburant</label><input type="number" id="utb-dep-car-f" class="input-modern w-28 p-2 rounded-lg text-center" placeholder="FCFA"></div>
+                <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50"><label class="text-gray-700 text-sm font-medium">Maintenance</label><input type="number" id="utb-dep-maint" class="input-modern w-28 p-2 rounded-lg text-center" placeholder="FCFA"></div>
+                <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50"><label class="text-gray-700 text-sm font-medium">Autres Fixes</label><input type="number" id="utb-dep-fixes" class="input-modern w-28 p-2 rounded-lg text-center" placeholder="FCFA"></div>
+              </div>
+
+              <!-- Dépenses diverses UTB -->
+              <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                  <div class="w-6 h-6 bg-gradient-to-br from-orange-400 to-yellow-600 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-receipt text-white text-xs"></i></div>
+                  Dépenses Diverses
+                </h3>
+                <button onclick="utbAddDiv()" class="text-white px-4 py-2 rounded-xl text-sm font-medium" style="background:linear-gradient(135deg,#7c3aed,#5b21b6)">
+                  <i class="fas fa-plus mr-2"></i>Ajouter
+                </button>
+              </div>
+              <div id="utb-divers" class="space-y-2 mb-8"></div>
+
+              <!-- Observations UTB -->
+              <h3 class="text-lg font-semibold text-gray-800 flex items-center mb-3">
+                <div class="w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-sticky-note text-white text-xs"></i></div>
+                Observations
+              </h3>
+              <textarea id="utb-obs" class="input-modern w-full h-24 p-4 rounded-xl resize-none" placeholder="Observations UTB..."></textarea>
+            </div>
+          </div>
+
+          <!-- Colonne droite UTB -->
+          <div class="space-y-6">
+            <!-- Résumé -->
+            <div class="stat-card rounded-2xl p-6 card-hover">
+              <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 animate-float" style="background:linear-gradient(135deg,#7c3aed,#5b21b6)"><i class="fas fa-chart-line text-white text-sm"></i></div>
+                Résumé UTB
+              </h3>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50"><span class="text-gray-600 text-sm">Total Livraisons</span><span id="utb-s-total" class="font-bold text-lg text-gray-800">0</span></div>
+                <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50"><span class="text-gray-600 text-sm">Échouées</span><span id="utb-s-ech" class="font-bold text-lg text-red-600">0</span></div>
+                <div class="flex justify-between items-center p-3 rounded-xl bg-gray-50"><span class="text-gray-600 text-sm">Réussies</span><span id="utb-s-ok" class="font-bold text-lg text-green-600">0</span></div>
+                <div class="border-t border-gray-200 pt-3 space-y-2">
+                  <div class="flex justify-between"><span class="text-gray-600 text-sm">Recettes Brutes</span><span id="utb-s-brut" class="font-bold text-gray-800">0 FCFA</span></div>
+                  <div class="flex justify-between"><span class="text-gray-600 text-sm">Recettes Nettes</span><span id="utb-s-net" class="font-bold text-purple-600">0 FCFA</span></div>
+                  <div class="flex justify-between border-t pt-2"><span class="font-bold text-sm">Bénéfice Net</span><span id="utb-s-ben" class="font-bold text-xl text-purple-600">0 FCFA</span></div>
+                </div>
+              </div>
+            </div>
+            <!-- Bilan -->
+            <div class="stat-card rounded-2xl p-6 card-hover">
+              <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 animate-float" style="background:linear-gradient(135deg,#7c3aed,#5b21b6)"><i class="fas fa-balance-scale text-white text-sm"></i></div>
+                Bilan UTB
+              </h3>
+              <div class="grid grid-cols-2 gap-3 border-t border-gray-200 pt-4 mb-4">
+                <div><p class="text-xs text-gray-500 font-bold uppercase">Total Nettes</p><p id="utb-b-rec" class="text-purple-600 font-bold text-lg">0 FCFA</p></div>
+                <div class="text-right"><p class="text-xs text-gray-500 font-bold uppercase">Total Dépenses</p><p id="utb-b-dep" class="text-red-600 font-bold text-lg">0 FCFA</p></div>
+              </div>
+              <div class="text-center">
+                <p class="text-xs text-gray-500 font-bold uppercase mb-2">Bénéfice Net</p>
+                <p id="utb-b-bal" class="text-3xl font-black rounded-xl py-3 bg-purple-100 text-purple-700">0 FCFA</p>
+              </div>
+            </div>
+            <!-- Boutons -->
+            <div class="space-y-3">
+              <button onclick="utbSave()" class="w-full text-white py-4 rounded-xl font-bold text-lg shadow-xl" style="background:linear-gradient(135deg,#7c3aed,#5b21b6)">
+                <i class="fas fa-cloud-upload-alt mr-3"></i>SAUVEGARDER UTB
+              </button>
+              <button onclick="utbExport()" class="w-full text-white py-4 rounded-xl font-bold text-lg shadow-xl" style="background:linear-gradient(135deg,#6d28d9,#4c1d95)">
+                <i class="fas fa-file-invoice mr-3"></i>RAPPORT UTB
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div><!-- /panel-utb -->
 
     <!-- Section Graphique moderne -->
     <div class="container mx-auto px-6 pb-8">
@@ -497,6 +680,155 @@
         }
         function logout() { sessionStorage.clear(); window.location.href='login.html'; }
     </script>
+
+    <script>
+    /* ══ SWITCH ONGLETS ══════════════════════════════════════ */
+    function switchClient(c) {
+        document.querySelectorAll('.client-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.client-tab').forEach(t => t.classList.remove('active-we','active-utb'));
+        document.getElementById('panel-' + c).classList.add('active');
+        document.getElementById('tab-' + c).classList.add('active-' + c);
+        if (c === 'utb') utbLoadDate(document.getElementById('utb-date').value);
+    }
+
+    /* ══ HELPERS UTB ════════════════════════════════════════= */
+    const utbN  = id => parseFloat(document.getElementById(id)?.value) || 0;
+    const utbFmt = n => new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA';
+
+    function utbCalc() {
+        let brut=0, net=0, totLiv=0, totEch=0;
+        [1000,1500,2000,2500].forEach(v => {
+            const l=utbN('utb-liv-'+v), e=utbN('utb-ech-'+v), m=utbN('utb-mar-'+v)/100;
+            totLiv+=l+e; totEch+=e; brut+=l*v; net+=l*v*m;
+        });
+        const depF = utbN('utb-dep-car-f')+utbN('utb-dep-maint')+utbN('utb-dep-fixes');
+        let depD=0;
+        document.querySelectorAll('#utb-divers .utb-amt').forEach(i=>depD+=parseFloat(i.value)||0);
+        const dep=depF+depD, ben=net-dep;
+        document.getElementById('utb-s-total').textContent = totLiv;
+        document.getElementById('utb-s-ech').textContent   = totEch;
+        document.getElementById('utb-s-ok').textContent    = totLiv-totEch;
+        document.getElementById('utb-s-brut').textContent  = utbFmt(brut);
+        document.getElementById('utb-s-net').textContent   = utbFmt(net);
+        document.getElementById('utb-s-ben').textContent   = utbFmt(ben);
+        document.getElementById('utb-b-rec').textContent   = utbFmt(net);
+        document.getElementById('utb-b-dep').textContent   = utbFmt(dep);
+        const b = document.getElementById('utb-b-bal');
+        b.textContent = utbFmt(ben);
+        b.className = 'text-3xl font-black rounded-xl py-3 '+(ben>=0?'bg-purple-100 text-purple-700':'bg-red-100 text-red-700');
+        return {brut,net,totLiv,totEch,dep,ben};
+    }
+
+    document.addEventListener('input', () => {
+        if (document.getElementById('panel-utb').classList.contains('active')) utbCalc();
+    });
+
+    /* ══ DATE ════════════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', () => {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('utb-date').value = today;
+        document.getElementById('utb-date').addEventListener('change', e => utbLoadDate(e.target.value));
+    });
+
+    /* ══ DÉPENSES DIVERSES ═══════════════════════════════════ */
+    let utbDivN = 0;
+    function utbAddDiv(label='', amount='') {
+        utbDivN++;
+        const d = document.createElement('div');
+        d.className = 'flex gap-2 items-center';
+        d.innerHTML = `<input type="text" placeholder="Libellé" value="${label}" class="input-modern flex-1 p-2 rounded-lg text-sm">
+            <input type="number" placeholder="FCFA" value="${amount}" class="input-modern utb-amt w-28 p-2 rounded-lg text-center text-sm">
+            <button onclick="this.parentElement.remove();utbCalc()" class="text-red-400 hover:text-red-600 px-2"><i class="fas fa-times"></i></button>`;
+        document.getElementById('utb-divers').appendChild(d);
+    }
+
+    /* ══ FIREBASE — collection utb_dailyData ═════════════════ */
+    function utbDB() { return firebase.firestore(); }
+
+    function utbReset() {
+        [1000,1500,2000,2500].forEach(v => {
+            ['utb-liv-','utb-ech-'].forEach(p => document.getElementById(p+v).value='');
+            document.getElementById('utb-mar-'+v).value=60;
+        });
+        ['utb-dep-car-l','utb-dep-car-f','utb-dep-maint','utb-dep-fixes'].forEach(id=>document.getElementById(id).value='');
+        document.getElementById('utb-obs').value='';
+        document.getElementById('utb-divers').innerHTML='';
+        utbDivN=0; utbCalc();
+    }
+
+    async function utbLoadDate(date) {
+        if (!date) return;
+        try {
+            const snap = await utbDB().collection('utb_dailyData').doc(date).get();
+            if (!snap.exists) { utbReset(); return; }
+            const d = snap.data();
+            [1000,1500,2000,2500].forEach(v => {
+                document.getElementById('utb-liv-'+v).value = d['liv_'+v]||'';
+                document.getElementById('utb-ech-'+v).value = d['ech_'+v]||'';
+                document.getElementById('utb-mar-'+v).value = d['mar_'+v]||60;
+            });
+            document.getElementById('utb-dep-car-l').value = d.dep_car_l||'';
+            document.getElementById('utb-dep-car-f').value = d.dep_car_f||'';
+            document.getElementById('utb-dep-maint').value = d.dep_maint||'';
+            document.getElementById('utb-dep-fixes').value = d.dep_fixes||'';
+            document.getElementById('utb-obs').value = d.obs||'';
+            document.getElementById('utb-divers').innerHTML=''; utbDivN=0;
+            (d.divers||[]).forEach(item=>utbAddDiv(item.label,item.amount));
+            utbCalc();
+        } catch(e) { console.error('UTB load error',e); }
+    }
+
+    async function utbSave() {
+        const date = document.getElementById('utb-date').value;
+        if (!date) { alert('Sélectionnez une date'); return; }
+        const s = utbCalc();
+        const divers=[];
+        document.querySelectorAll('#utb-divers .flex').forEach(row=>{
+            const ins=row.querySelectorAll('input');
+            if(ins[0]&&ins[1]) divers.push({label:ins[0].value, amount:parseFloat(ins[1].value)||0});
+        });
+        const data = {
+            date,
+            liv_1000:utbN('utb-liv-1000'), ech_1000:utbN('utb-ech-1000'), mar_1000:utbN('utb-mar-1000'),
+            liv_1500:utbN('utb-liv-1500'), ech_1500:utbN('utb-ech-1500'), mar_1500:utbN('utb-mar-1500'),
+            liv_2000:utbN('utb-liv-2000'), ech_2000:utbN('utb-ech-2000'), mar_2000:utbN('utb-mar-2000'),
+            liv_2500:utbN('utb-liv-2500'), ech_2500:utbN('utb-ech-2500'), mar_2500:utbN('utb-mar-2500'),
+            dep_car_l:utbN('utb-dep-car-l'), dep_car_f:utbN('utb-dep-car-f'),
+            dep_maint:utbN('utb-dep-maint'), dep_fixes:utbN('utb-dep-fixes'),
+            obs:document.getElementById('utb-obs').value,
+            divers, ...s,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        try {
+            await utbDB().collection('utb_dailyData').doc(date).set(data,{merge:true});
+            alert('✅ Données UTB sauvegardées — ' + date);
+        } catch(e) { alert('❌ Erreur : '+e.message); }
+    }
+
+    function utbExport() {
+        const date = document.getElementById('utb-date').value;
+        const s = utbCalc();
+        let txt = 'RAPPORT UTB
+' + '='.repeat(36) + '
+';
+        txt += 'Date : ' + date + '
+
+';
+        txt += 'Livraisons réussies : ' + (s.totLiv-s.totEch) + '
+';
+        txt += 'Recettes nettes     : ' + utbFmt(s.net) + '
+';
+        txt += 'Total dépenses      : ' + utbFmt(s.dep) + '
+';
+        txt += 'Bénéfice net        : ' + utbFmt(s.ben) + '
+';
+        const a = Object.assign(document.createElement('a'),{
+            href: URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'})),
+            download: 'rapport_utb_'+date+'.txt'
+        });
+        a.click();
+    }
+    </script>
+
 </body>
 </html>
-

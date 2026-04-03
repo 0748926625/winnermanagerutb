@@ -16,7 +16,7 @@ const auth = firebase.auth();
 
 class DeliveryDashboard {
     constructor() {
-        this.data = JSON.parse(localStorage.getItem('deliveryHistoricalData')) || {};
+        this.data = JSON.parse(localStorage.getItem('utb_deliveryHistoricalData')) || {};
         this.currentDate = new Date().toISOString().split('T')[0];
         
         this.initSelectors();
@@ -222,7 +222,7 @@ class DeliveryDashboard {
         };
 
         this.data[this.currentDate] = dayData;
-        localStorage.setItem('deliveryHistoricalData', JSON.stringify(this.data));
+        localStorage.setItem('utb_deliveryHistoricalData', JSON.stringify(this.data));
         this.showStatus();
     }
 
@@ -788,7 +788,7 @@ Généré par Winner Express - ${dateObj.toLocaleDateString('fr-FR')} ${heure}`;
                 console.log('📊 Nombre de jours dans Firebase:', Object.keys(firebaseData).length);
                 
                 // Fusionner avec les données locales
-                const localData = JSON.parse(localStorage.getItem('deliveryHistoricalData')) || {};
+                const localData = JSON.parse(localStorage.getItem('utb_deliveryHistoricalData')) || {};
                 console.log('💾 Données locales actuelles:', localData);
                 console.log('📊 Nombre de jours en local:', Object.keys(localData).length);
                 
@@ -796,7 +796,7 @@ Généré par Winner Express - ${dateObj.toLocaleDateString('fr-FR')} ${heure}`;
                 console.log('🔀 Données fusionnées:', mergedData);
                 
                 this.data = mergedData;
-                localStorage.setItem('deliveryHistoricalData', JSON.stringify(mergedData));
+                localStorage.setItem('utb_deliveryHistoricalData', JSON.stringify(mergedData));
                 
                 console.log('✅ Données chargées et fusionnées avec succès !');
                 
@@ -838,7 +838,7 @@ Généré par Winner Express - ${dateObj.toLocaleDateString('fr-FR')} ${heure}`;
             }
 
             // 4. Si on a le user, on envoie les données
-            const currentData = JSON.parse(localStorage.getItem('deliveryHistoricalData')) || {};
+            const currentData = JSON.parse(localStorage.getItem('utb_deliveryHistoricalData')) || {};
             console.log('📊 Données locales à synchroniser:', currentData);
             
             await db.collection('users').doc(user.uid).set({
@@ -931,7 +931,7 @@ Généré par Winner Express - ${dateObj.toLocaleDateString('fr-FR')} ${heure}`;
 
         // Sauvegarder les données pour les graphiques
         const chartData = { dates, recettes, livraisons, depenses, balances };
-        localStorage.setItem('deliveryChartData', JSON.stringify(chartData));
+        localStorage.setItem('utb_deliveryChartData', JSON.stringify(chartData));
 
         // Initialiser les graphiques si on est sur la page graphiques.html
         if (typeof Chart !== 'undefined') {
@@ -951,7 +951,7 @@ Généré par Winner Express - ${dateObj.toLocaleDateString('fr-FR')} ${heure}`;
         }
 
         // Récupérer les données préparées
-        const chartData = JSON.parse(localStorage.getItem('deliveryChartData') || '{}');
+        const chartData = JSON.parse(localStorage.getItem('utb_deliveryChartData') || '{}');
         const { dates, recettes, livraisons, depenses, balances } = chartData;
 
         if (!dates || dates.length === 0) {
