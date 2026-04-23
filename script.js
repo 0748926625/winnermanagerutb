@@ -1,12 +1,12 @@
-// Configuration Firebase — UTB
+// Configuration Firebase
 const firebaseConfig = {
-    apiKey:            "AIzaSyDEOVQ7Zctxm-e-uckUNopUUHKL8iQ51bk",
-    authDomain:        "winnergestionutb.firebaseapp.com",
-    projectId:         "winnergestionutb",
-    storageBucket:     "winnergestionutb.firebasestorage.app",
-    messagingSenderId: "487787959913",
-    appId:             "1:487787959913:web:69e58c00ee51152f0cb4f8",
-    measurementId:     "G-BP2WPS1DW8"
+    apiKey: "AIzaSyAwQhUFlZWTGebL2c5RB6OF9m95Wwut4Ck",
+    authDomain: "winner-express.firebaseapp.com",
+    projectId: "winner-express",
+    storageBucket: "winner-express.firebasestorage.app",
+    messagingSenderId: "619154248559",
+    appId: "1:619154248559:web:14f85763a9c4d55cdece9a",
+    measurementId: "G-D3HTJYJESF"
 };
 
 // Initialiser Firebase
@@ -16,25 +16,116 @@ const auth = firebase.auth();
 
 class DeliveryDashboard {
     constructor() {
-        this.data = JSON.parse(localStorage.getItem('utb_deliveryHistoricalData')) || {};
+        this.currentMode = 'general'; // 'general' ou 'utb'
+        this.data = JSON.parse(localStorage.getItem('deliveryHistoricalData')) || {};
         this.currentDate = new Date().toISOString().split('T')[0];
-        
+
         this.initSelectors();
         this.initEventListeners();
-        
+
         // Initialiser Firebase et se connecter automatiquement
         this.initFirebase();
-        
+
         // Ne charger les données du formulaire que si on est sur la page principale
         if (document.getElementById('liv-1000')) {
+            this.applyDefaultMargins();
             this.loadDateData(this.currentDate);
         }
-        
+
         // Charger les données pour les graphiques après un court délai
         setTimeout(() => {
             this.loadChartData();
             this.updateChartPeriod('month'); // Par défaut : mois en cours
         }, 500);
+    }
+
+    // Clé localStorage selon le mode actif
+    getStorageKey() {
+        return this.currentMode === 'utb' ? 'utbHistoricalData' : 'deliveryHistoricalData';
+    }
+
+    // Champ Firebase selon le mode actif
+    getFirebaseField() {
+        return this.currentMode === 'utb' ? 'utbDeliveryData' : 'deliveryData';
+    }
+
+    switchMode(mode) {
+        if (this.currentMode === mode) return;
+
+        const tabGeneral  = document.getElementById('tab-general');
+        const tabUtb      = document.getElementById('tab-utb');
+        const tabLivreurs = document.getElementById('tab-livreurs');
+        const contentDel  = document.getElementById('content-deliveries');
+        const contentLiv  = document.getElementById('content-livreurs');
+
+        // Réinitialiser tous les onglets
+        const inactiveClass = 'tab-btn px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 text-gray-500 hover:bg-gray-100';
+        tabGeneral.className  = inactiveClass;
+        tabUtb.className      = inactiveClass;
+        tabLivreurs.className = inactiveClass;
+
+        if (mode === 'livreurs') {
+            // Sauvegarder avant de quitter le mode livraisons
+            if (this.currentMode !== 'livreurs') this.save();
+            this.currentMode = mode;
+
+            tabLivreurs.className = 'tab-btn px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 text-white shadow-md';
+            tabLivreurs.style.background = '#6d28d9';
+            tabGeneral.style.background  = '';
+            tabUtb.style.background      = '';
+
+            contentDel.classList.add('hidden');
+            contentLiv.classList.remove('hidden');
+            document.body.style.backgroundColor = '#f5f3ff';
+
+            // Initialiser la date et rendre le tableau
+            const dateInput = document.getElementById('livreur-date');
+            if (dateInput && !dateInput.value) {
+                dateInput.value = this.currentDate;
+                dateInput.addEventListener('change', () => this.renderLivreursDailyTable());
+            }
+            // Afficher ce qu'on a en local immédiatement
+            this.renderLivreursList();
+            this.renderLivreursDailyTable();
+            // Puis récupérer Firebase et rafraîchir
+            this.loadLivreursFromFirebase();
+
+        } else {
+            // Sauvegarder avant de quitter livreurs
+            if (this.currentMode === 'livreurs') this.saveLivreurDay();
+            this.currentMode = mode;
+            this.data = JSON.parse(localStorage.getItem(this.getStorageKey())) || {};
+
+            contentLiv.classList.add('hidden');
+            contentDel.classList.remove('hidden');
+
+            tabLivreurs.style.background = '';
+
+            const formTitle = document.getElementById('form-title');
+            const formIcon  = document.getElementById('form-icon');
+
+            if (mode === 'utb') {
+                tabUtb.className  = 'tab-btn px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 text-white shadow-md';
+                tabUtb.style.background = '#ea580c';
+                if (formTitle) formTitle.textContent = 'Saisie Journalière — UTB';
+                if (formIcon)  formIcon.className = 'w-8 h-8 rounded-lg flex items-center justify-center mr-3';
+                if (formIcon)  formIcon.style.background = '#ea580c';
+                document.body.style.backgroundColor = '#4c1d95';
+            } else {
+                tabGeneral.className  = 'tab-btn px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 text-white shadow-md';
+                tabGeneral.style.background = '#059669';
+                if (formTitle) formTitle.textContent = 'Saisie Journalière';
+                if (formIcon)  formIcon.className = 'w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-600 rounded-lg flex items-center justify-center mr-3';
+                if (formIcon)  formIcon.style.background = '';
+                document.body.style.backgroundColor = '#f3f4f6';
+            }
+
+            if (document.getElementById('liv-1000')) {
+                this.applyDefaultMargins();
+                this.loadDateData(this.currentDate);
+            }
+            this.updateChartPeriod('month');
+        }
     }
 
     initSelectors() {
@@ -148,6 +239,18 @@ class DeliveryDashboard {
         return new Intl.NumberFormat('fr-FR').format(Math.round(v)) + " FCFA";
     }
 
+    defaultMargin() {
+        return this.currentMode === 'utb' ? 60 : 75;
+    }
+
+    applyDefaultMargins() {
+        const m = this.defaultMargin();
+        ['mar-1000','mar-1500','mar-2000','mar-2500'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = m;
+        });
+    }
+
     // Gestion des dépenses personnalisées
     addDiversRow(nom = "", mt = "") {
         if (!this.diversContainer) {
@@ -206,10 +309,10 @@ class DeliveryDashboard {
                 e1500: ech1500 ? ech1500.value : 0,
                 e2000: ech2000 ? ech2000.value : 0,
                 e2500: ech2500 ? ech2500.value : 0,
-                m1000: mar1000 ? mar1000.value : 75,
-                m1500: mar1500 ? mar1500.value : 75,
-                m2000: mar2000 ? mar2000.value : 75,
-                m2500: mar2500 ? mar2500.value : 75
+                m1000: mar1000 ? mar1000.value : this.defaultMargin(),
+                m1500: mar1500 ? mar1500.value : this.defaultMargin(),
+                m2000: mar2000 ? mar2000.value : this.defaultMargin(),
+                m2500: mar2500 ? mar2500.value : this.defaultMargin()
             },
             dep: {
                 carL: depCarL ? depCarL.value : 0,
@@ -222,7 +325,7 @@ class DeliveryDashboard {
         };
 
         this.data[this.currentDate] = dayData;
-        localStorage.setItem('utb_deliveryHistoricalData', JSON.stringify(this.data));
+        localStorage.setItem(this.getStorageKey(), JSON.stringify(this.data));
         this.showStatus();
     }
 
@@ -256,10 +359,11 @@ class DeliveryDashboard {
             if (ech1500) ech1500.value = d.liv.e1500;
             if (ech2000) ech2000.value = d.liv.e2000;
             if (ech2500) ech2500.value = d.liv.e2500;
-            if (mar1000) mar1000.value = d.liv.m1000 || 75;
-            if (mar1500) mar1500.value = d.liv.m1500 || 75;
-            if (mar2000) mar2000.value = d.liv.m2000 || 75;
-            if (mar2500) mar2500.value = d.liv.m2500 || 75;
+            const defMarg = this.defaultMargin();
+            if (mar1000) mar1000.value = this.currentMode === 'utb' ? defMarg : (d.liv.m1000 || defMarg);
+            if (mar1500) mar1500.value = this.currentMode === 'utb' ? defMarg : (d.liv.m1500 || defMarg);
+            if (mar2000) mar2000.value = this.currentMode === 'utb' ? defMarg : (d.liv.m2000 || defMarg);
+            if (mar2500) mar2500.value = this.currentMode === 'utb' ? defMarg : (d.liv.m2500 || defMarg);
             
             const depCarL = document.getElementById('dep-car-l');
             const depCarF = document.getElementById('dep-car-f');
@@ -284,7 +388,7 @@ class DeliveryDashboard {
         const inputs = document.querySelectorAll('input[type="number"]');
         inputs.forEach(i => {
             if (i.id && i.id.includes('mar-')) {
-                i.value = 75;
+                i.value = this.defaultMargin();
             } else if (i.id) {
                 i.value = 0;
             }
@@ -304,6 +408,7 @@ class DeliveryDashboard {
         // Créer une notification moderne et visible
         const notification = document.createElement('div');
         notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-xl z-50 flex items-center space-x-3 notification-enter';
+        const modeLabel = this.currentMode === 'utb' ? 'UTB' : 'Clients Généraux';
         notification.innerHTML = `
             <div class="flex-shrink-0">
                 <div class="w-6 h-6 bg-white rounded-full flex items-center justify-center animate-pulse">
@@ -311,7 +416,7 @@ class DeliveryDashboard {
                 </div>
             </div>
             <div>
-                <p class="font-semibold">Données enregistrées</p>
+                <p class="font-semibold">Données enregistrées — ${modeLabel}</p>
                 <p class="text-sm opacity-90">Vos informations ont été sauvegardées avec succès</p>
             </div>
         `;
@@ -350,7 +455,7 @@ class DeliveryDashboard {
             const qty = Math.max(0, parseInt(res.liv[`l${val}`]) || 0);
             const ech = Math.min(qty, Math.max(0, parseInt(res.liv[`e${val}`]) || 0));
             const reussies = qty - ech;
-            const margPct = (parseFloat(res.liv[`m${val}`]) || 75) / 100;
+            const margPct = (parseFloat(res.liv[`m${val}`]) || this.defaultMargin()) / 100;
             const recette = reussies * val;
             const recetteNet = recette * margPct;
             
@@ -423,10 +528,10 @@ Recettes brutes: ${this.formatFCFA(brut)}`;
             rapport += `\nMoyenne par livraison: ${this.formatFCFA(moyenne)}`;
         }
         
-        rapport += `\nMarge 1000 FCFA: ${details.find(d => d.val === 1000)?.margPct || 75}%
-Marge 1500 FCFA: ${details.find(d => d.val === 1500)?.margPct || 75}%
-Marge 2000 FCFA: ${details.find(d => d.val === 2000)?.margPct || 75}%
-Marge 2500 FCFA: ${details.find(d => d.val === 2500)?.margPct || 75}%
+        rapport += `\nMarge 1000 FCFA: ${details.find(d => d.val === 1000)?.margPct || this.defaultMargin()}%
+Marge 1500 FCFA: ${details.find(d => d.val === 1500)?.margPct || this.defaultMargin()}%
+Marge 2000 FCFA: ${details.find(d => d.val === 2000)?.margPct || this.defaultMargin()}%
+Marge 2500 FCFA: ${details.find(d => d.val === 2500)?.margPct || this.defaultMargin()}%
 -------------------------------------
 Part partenaires: ${this.formatFCFA(partPartenaires)}
 RECETTES NETTES: ${this.formatFCFA(net)}
@@ -570,7 +675,7 @@ Généré par Winner Express - ${dateObj.toLocaleDateString('fr-FR')} ${heure}`;
                     const qty = Math.max(0, parseInt(liv[`l${val}`]) || 0);
                     const ech = Math.min(qty, Math.max(0, parseInt(liv[`e${val}`]) || 0));
                     const reussies = qty - ech;
-                    const margPct = (parseFloat(liv[`m${val}`]) || 75) / 100;
+                    const margPct = (parseFloat(liv[`m${val}`]) || this.defaultMargin()) / 100;
                     net += (reussies * val) * margPct;
                 });
 
@@ -783,32 +888,63 @@ Généré par Winner Express - ${dateObj.toLocaleDateString('fr-FR')} ${heure}`;
 
             const doc = await db.collection('users').doc(user.uid).get();
             if (doc.exists) {
-                const firebaseData = doc.data().deliveryData || {};
-                console.log('📥 Données trouvées dans Firebase:', firebaseData);
-                console.log('📊 Nombre de jours dans Firebase:', Object.keys(firebaseData).length);
-                
-                // Fusionner avec les données locales
-                const localData = JSON.parse(localStorage.getItem('utb_deliveryHistoricalData')) || {};
-                console.log('💾 Données locales actuelles:', localData);
-                console.log('📊 Nombre de jours en local:', Object.keys(localData).length);
-                
-                const mergedData = { ...localData, ...firebaseData };
-                console.log('🔀 Données fusionnées:', mergedData);
-                
-                this.data = mergedData;
-                localStorage.setItem('utb_deliveryHistoricalData', JSON.stringify(mergedData));
-                
-                console.log('✅ Données chargées et fusionnées avec succès !');
-                
-                // Recharger les données si on est sur la page principale
+                // Synchroniser les deux modes depuis Firebase
+                const modes = [
+                    { field: 'deliveryData',    storageKey: 'deliveryHistoricalData' },
+                    { field: 'utbDeliveryData', storageKey: 'utbHistoricalData' }
+                ];
+
+                for (const m of modes) {
+                    const firebaseData = doc.data()[m.field] || {};
+                    const localData = JSON.parse(localStorage.getItem(m.storageKey)) || {};
+                    const mergedData = { ...localData, ...firebaseData };
+                    localStorage.setItem(m.storageKey, JSON.stringify(mergedData));
+                    console.log(`✅ Mode ${m.field} synchronisé (${Object.keys(mergedData).length} jours)`);
+                }
+
+                // Synchroniser les données livreurs
+                const fbLivreurs = doc.data().livreursList;
+                if (fbLivreurs) localStorage.setItem('livreursList', JSON.stringify(fbLivreurs));
+
+                const fbLivDaily = doc.data().livreursDailyData;
+                if (fbLivDaily) {
+                    const localDaily  = JSON.parse(localStorage.getItem('livreursDailyData')) || {};
+                    localStorage.setItem('livreursDailyData', JSON.stringify({ ...localDaily, ...fbLivDaily }));
+                }
+
+                const fbPrimes = doc.data().livreursPrimes;
+                if (fbPrimes) {
+                    const localPrimes = JSON.parse(localStorage.getItem('livreursPrimes')) || {};
+                    localStorage.setItem('livreursPrimes', JSON.stringify({ ...localPrimes, ...fbPrimes }));
+                }
+
+                console.log('✅ Données livreurs synchronisées depuis Firebase');
+
+                // Recharger les données du mode actif
+                this.data = JSON.parse(localStorage.getItem(this.getStorageKey())) || {};
+
                 if (document.getElementById('liv-1000')) {
                     this.loadDateData(this.currentDate);
+                }
+
+                // Rafraîchir l'affichage livreurs si actif
+                if (this.currentMode === 'livreurs') {
+                    this.renderLivreursList();
+                    this.renderLivreursDailyTable();
                 }
             } else {
                 console.log('📭 Aucune donnée trouvée dans Firebase pour cet utilisateur');
             }
         } catch (error) {
             console.error('❌ Erreur de synchronisation depuis Firebase:', error);
+            
+            // Si c'est une erreur de permissions, on continue en mode local
+            if (error.code === 'permission-denied' || error.message.includes('Missing or insufficient permissions')) {
+                console.warn('⚠️ Permissions Firebase insuffisantes, mode local uniquement');
+                // Ne pas afficher d'alerte, continuer en mode local
+                return;
+            }
+            
             alert('Erreur de chargement: ' + error.message);
         }
     }
@@ -837,12 +973,13 @@ Généré par Winner Express - ${dateObj.toLocaleDateString('fr-FR')} ${heure}`;
                 return;
             }
 
-            // 4. Si on a le user, on envoie les données
-            const currentData = JSON.parse(localStorage.getItem('utb_deliveryHistoricalData')) || {};
-            console.log('📊 Données locales à synchroniser:', currentData);
-            
+            // 4. Si on a le user, on envoie les données du mode actif
+            const currentData = JSON.parse(localStorage.getItem(this.getStorageKey())) || {};
+            const firebaseField = this.getFirebaseField();
+            console.log(`📊 Données [${this.currentMode}] à synchroniser:`, currentData);
+
             await db.collection('users').doc(user.uid).set({
-                deliveryData: currentData,
+                [firebaseField]: currentData,
                 lastSync: new Date().toISOString(),
                 email: user.email
             }, { merge: true });
@@ -852,6 +989,15 @@ Généré par Winner Express - ${dateObj.toLocaleDateString('fr-FR')} ${heure}`;
             
         } catch (error) {
             console.error('❌ Erreur Firestore:', error);
+            
+            // Si c'est une erreur de permissions, on continue en mode local
+            if (error.code === 'permission-denied' || error.message.includes('Missing or insufficient permissions')) {
+                console.warn('⚠️ Permissions Firebase insuffisantes, sauvegarde locale uniquement');
+                // Ne pas afficher d'alerte, continuer en mode local
+                this.showSyncStatus(); // Montrer que la sauvegarde locale a fonctionné
+                return;
+            }
+            
             alert('Erreur de synchronisation : ' + error.message);
         }
     }
@@ -878,16 +1024,19 @@ Généré par Winner Express - ${dateObj.toLocaleDateString('fr-FR')} ${heure}`;
     // Méthodes pour les graphiques
     loadChartData() {
         console.log('Chargement des données pour les graphiques...');
-        
+
+        // Lire les données du mode actif
+        const activeData = JSON.parse(localStorage.getItem(this.getStorageKey())) || {};
+
         // Préparer les données pour les graphiques
-        const dates = Object.keys(this.data).sort();
+        const dates = Object.keys(activeData).sort();
         const recettes = [];
         const livraisons = [];
         const depenses = [];
         const balances = [];
 
         dates.forEach(date => {
-            const dayData = this.data[date];
+            const dayData = activeData[date];
             if (dayData) {
                 // Calculer les recettes et dépenses pour cette date
                 let net = 0;
@@ -896,10 +1045,10 @@ Généré par Winner Express - ${dateObj.toLocaleDateString('fr-FR')} ${heure}`;
 
                 // Calcul des livraisons
                 [1000, 1500, 2000, 2500].forEach(val => {
-                    const qty = Math.max(0, parseInt(dayData.liv[`l${val}`]) || 0);
-                    const ech = Math.min(qty, Math.max(0, parseInt(dayData.liv[`e${val}`]) || 0));
+                    const qty = Math.max(0, parseInt(dayData.liv['l' + val]) || 0);
+                    const ech = Math.min(qty, Math.max(0, parseInt(dayData.liv['e' + val]) || 0));
                     const reussies = qty - ech;
-                    const margPct = (parseFloat(dayData.liv[`m${val}`]) || 75) / 100;
+                    const margPct = (parseFloat(dayData.liv['m' + val]) || this.defaultMargin()) / 100;
                     net += (reussies * val) * margPct;
                     totalLiv += qty;
                 });
@@ -931,7 +1080,7 @@ Généré par Winner Express - ${dateObj.toLocaleDateString('fr-FR')} ${heure}`;
 
         // Sauvegarder les données pour les graphiques
         const chartData = { dates, recettes, livraisons, depenses, balances };
-        localStorage.setItem('utb_deliveryChartData', JSON.stringify(chartData));
+        localStorage.setItem('deliveryChartData', JSON.stringify(chartData));
 
         // Initialiser les graphiques si on est sur la page graphiques.html
         if (typeof Chart !== 'undefined') {
@@ -951,7 +1100,7 @@ Généré par Winner Express - ${dateObj.toLocaleDateString('fr-FR')} ${heure}`;
         }
 
         // Récupérer les données préparées
-        const chartData = JSON.parse(localStorage.getItem('utb_deliveryChartData') || '{}');
+        const chartData = JSON.parse(localStorage.getItem('deliveryChartData') || '{}');
         const { dates, recettes, livraisons, depenses, balances } = chartData;
 
         if (!dates || dates.length === 0) {
@@ -1111,6 +1260,869 @@ Généré par Winner Express - ${dateObj.toLocaleDateString('fr-FR')} ${heure}`;
         } catch (error) {
             console.error('Erreur création graphiques:', error);
         }
+    }
+
+    // ─── Rapport Mensuel ─────────────────────────────────────────────────────
+
+    showMonthlyReportModal() {
+        const modal = document.getElementById('monthly-modal');
+        const modeLabel = document.getElementById('modal-mode-label');
+        const header = document.getElementById('modal-header');
+        const yearInput = document.getElementById('report-year');
+        const monthInput = document.getElementById('report-month');
+
+        // Titre et couleur selon le mode actif
+        if (this.currentMode === 'utb') {
+            modeLabel.textContent = 'UTB';
+            header.style.backgroundColor = '#ea580c';
+        } else {
+            modeLabel.textContent = 'Clients Généraux';
+            header.style.backgroundColor = '#059669';
+        }
+
+        // Pré-remplir avec le mois en cours
+        const now = new Date();
+        yearInput.value = now.getFullYear();
+        monthInput.value = now.getMonth() + 1;
+
+        // Réinitialiser le contenu
+        document.getElementById('monthly-kpi').classList.add('hidden');
+        document.getElementById('monthly-table-container').innerHTML = `
+            <p class="text-gray-400 text-center py-12">
+                <i class="fas fa-calendar-alt text-4xl mb-3 block opacity-30"></i>
+                Sélectionnez un mois et cliquez sur "Afficher"
+            </p>`;
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        // Fermer avec Échap
+        this._escHandler = (e) => { if (e.key === 'Escape') this.closeMonthlyModal(); };
+        document.addEventListener('keydown', this._escHandler);
+    }
+
+    closeMonthlyModal() {
+        const modal = document.getElementById('monthly-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        if (this._escHandler) {
+            document.removeEventListener('keydown', this._escHandler);
+            this._escHandler = null;
+        }
+    }
+
+    _getMonthStats(year, month) {
+        const activeData = JSON.parse(localStorage.getItem(this.getStorageKey())) || {};
+        const days = [];
+
+        // Itérer sur tous les jours du mois
+        const daysInMonth = new Date(year, month, 0).getDate();
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const dayData = activeData[dateStr];
+            if (!dayData) continue;
+
+            const liv = dayData.liv || {};
+            const dep = dayData.dep || {};
+
+            let totalLiv = 0, totalEch = 0, brut = 0, net = 0, totalDep = 0;
+
+            [1000, 1500, 2000, 2500].forEach(val => {
+                const qty  = Math.max(0, parseInt(liv[`l${val}`]) || 0);
+                const ech  = Math.min(qty, Math.max(0, parseInt(liv[`e${val}`]) || 0));
+                const ok   = qty - ech;
+                const marg = (parseFloat(liv[`m${val}`]) || this.defaultMargin()) / 100;
+                totalLiv += qty;
+                totalEch += ech;
+                brut     += ok * val;
+                net      += ok * val * marg;
+            });
+
+            totalDep += parseFloat(dep.carF)   || 0;
+            totalDep += parseFloat(dep.maint)  || 0;
+            totalDep += parseFloat(dep.fixes)  || 0;
+            (dep.divers || []).forEach(div => { totalDep += parseFloat(div.mt) || 0; });
+
+            days.push({ dateStr, totalLiv, totalEch, brut, net, totalDep, balance: net - totalDep, obs: dayData.obs || '' });
+        }
+
+        // Totaux
+        const totaux = days.reduce((acc, d) => ({
+            totalLiv:  acc.totalLiv  + d.totalLiv,
+            totalEch:  acc.totalEch  + d.totalEch,
+            brut:      acc.brut      + d.brut,
+            net:       acc.net       + d.net,
+            totalDep:  acc.totalDep  + d.totalDep,
+            balance:   acc.balance   + d.balance
+        }), { totalLiv:0, totalEch:0, brut:0, net:0, totalDep:0, balance:0 });
+
+        return { days, totaux };
+    }
+
+    generateMonthlyPreview() {
+        const year  = parseInt(document.getElementById('report-year').value);
+        const month = parseInt(document.getElementById('report-month').value);
+        if (!year || !month) return;
+
+        const { days, totaux } = this._getMonthStats(year, month);
+
+        // Mettre à jour les KPIs
+        const kpiSection = document.getElementById('monthly-kpi');
+        kpiSection.classList.remove('hidden');
+        document.getElementById('kpi-jours').textContent    = days.length;
+        document.getElementById('kpi-recettes').textContent = this.formatFCFA(totaux.net);
+        document.getElementById('kpi-depenses').textContent = this.formatFCFA(totaux.totalDep);
+        const kpiBenef = document.getElementById('kpi-benefice');
+        kpiBenef.textContent  = this.formatFCFA(totaux.balance);
+        kpiBenef.className    = `text-2xl font-black mt-1 ${totaux.balance >= 0 ? 'text-purple-700' : 'text-red-600'}`;
+
+        const container = document.getElementById('monthly-table-container');
+
+        if (days.length === 0) {
+            container.innerHTML = `<p class="text-gray-400 text-center py-12"><i class="fas fa-inbox text-4xl mb-3 block opacity-30"></i>Aucune donnée pour ce mois</p>`;
+            return;
+        }
+
+        const moisNom = new Date(year, month - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        const modeLabel = this.currentMode === 'utb' ? 'UTB' : 'Clients Généraux';
+
+        let rows = days.map(d => {
+            const dateFr = new Date(d.dateStr + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+            const balColor = d.balance >= 0 ? 'text-green-600' : 'text-red-600';
+            return `<tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <td class="px-3 py-2 text-sm font-medium text-gray-700 whitespace-nowrap">${dateFr}</td>
+                <td class="px-3 py-2 text-sm text-center text-gray-600">${d.totalLiv}</td>
+                <td class="px-3 py-2 text-sm text-center text-red-500">${d.totalEch}</td>
+                <td class="px-3 py-2 text-sm text-center text-gray-500">${this.formatFCFA(d.brut)}</td>
+                <td class="px-3 py-2 text-sm text-center text-green-600 font-semibold">${this.formatFCFA(d.net)}</td>
+                <td class="px-3 py-2 text-sm text-center text-red-600">${this.formatFCFA(d.totalDep)}</td>
+                <td class="px-3 py-2 text-sm text-center font-bold ${balColor}">${this.formatFCFA(d.balance)}</td>
+            </tr>`;
+        }).join('');
+
+        const totBalColor = totaux.balance >= 0 ? 'text-green-700' : 'text-red-700';
+        container.innerHTML = `
+            <h3 class="text-base font-bold text-gray-700 mb-3 flex items-center gap-2">
+                <i class="fas fa-table text-gray-400"></i>
+                Détail journalier — ${moisNom} (${modeLabel})
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
+                            <th class="px-3 py-2 text-left rounded-tl-lg">Date</th>
+                            <th class="px-3 py-2 text-center">Livraisons</th>
+                            <th class="px-3 py-2 text-center">Échecs</th>
+                            <th class="px-3 py-2 text-center">Brut</th>
+                            <th class="px-3 py-2 text-center">Nettes</th>
+                            <th class="px-3 py-2 text-center">Dépenses</th>
+                            <th class="px-3 py-2 text-center rounded-tr-lg">Bénéfice</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                    <tfoot>
+                        <tr class="bg-gray-50 font-bold border-t-2 border-gray-300">
+                            <td class="px-3 py-3 text-sm text-gray-800">TOTAL (${days.length} jours)</td>
+                            <td class="px-3 py-3 text-sm text-center text-gray-700">${totaux.totalLiv}</td>
+                            <td class="px-3 py-3 text-sm text-center text-red-500">${totaux.totalEch}</td>
+                            <td class="px-3 py-3 text-sm text-center text-gray-600">${this.formatFCFA(totaux.brut)}</td>
+                            <td class="px-3 py-3 text-sm text-center text-green-700">${this.formatFCFA(totaux.net)}</td>
+                            <td class="px-3 py-3 text-sm text-center text-red-600">${this.formatFCFA(totaux.totalDep)}</td>
+                            <td class="px-3 py-3 text-sm text-center ${totBalColor}">${this.formatFCFA(totaux.balance)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>`;
+    }
+
+    downloadMonthlyReport() {
+        const year  = parseInt(document.getElementById('report-year').value);
+        const month = parseInt(document.getElementById('report-month').value);
+        if (!year || !month) return;
+
+        const { days, totaux } = this._getMonthStats(year, month);
+        const moisNom   = new Date(year, month - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        const modeLabel = this.currentMode === 'utb' ? 'UTB' : 'Clients Généraux';
+        const heure     = new Date().toLocaleTimeString('fr-FR');
+
+        if (days.length === 0) {
+            alert(`Aucune donnée pour ${moisNom} — ${modeLabel}`);
+            return;
+        }
+
+        const sep = '='.repeat(60);
+        const line = '-'.repeat(60);
+
+        let rapport = `${sep}
+   RAPPORT MENSUEL — WINNER EXPRESS
+   Mode : ${modeLabel}
+   Période : ${moisNom.toUpperCase()}
+   Généré le : ${new Date().toLocaleDateString('fr-FR')} à ${heure}
+${sep}
+
+`;
+
+        rapport += `RÉCAPITULATIF DU MOIS
+${line}
+Jours actifs       : ${days.length}
+Total livraisons   : ${totaux.totalLiv}
+Total échecs       : ${totaux.totalEch}
+Livraisons réussies: ${totaux.totalLiv - totaux.totalEch}
+${line}
+Recettes brutes    : ${this.formatFCFA(totaux.brut)}
+Recettes nettes    : ${this.formatFCFA(totaux.net)}
+Total dépenses     : ${this.formatFCFA(totaux.totalDep)}
+${line}
+BÉNÉFICE NET       : ${this.formatFCFA(totaux.balance)}
+${totaux.balance >= 0 ? '✅ MOIS RENTABLE' : '❌ MOIS DÉFICITAIRE'}
+
+`;
+
+        rapport += `${sep}
+DÉTAIL JOURNALIER
+${sep}
+${'Date'.padEnd(15)} ${'Livr.'.padStart(6)} ${'Éch.'.padStart(5)} ${'Nettes'.padStart(14)} ${'Dépenses'.padStart(14)} ${'Bénéfice'.padStart(14)}
+${line}
+`;
+
+        days.forEach(d => {
+            const dateFr = new Date(d.dateStr + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+            rapport += `${dateFr.padEnd(15)} ${String(d.totalLiv).padStart(6)} ${String(d.totalEch).padStart(5)} ${this.formatFCFA(d.net).padStart(14)} ${this.formatFCFA(d.totalDep).padStart(14)} ${this.formatFCFA(d.balance).padStart(14)}\n`;
+        });
+
+        rapport += `${line}
+${'TOTAL'.padEnd(15)} ${String(totaux.totalLiv).padStart(6)} ${String(totaux.totalEch).padStart(5)} ${this.formatFCFA(totaux.net).padStart(14)} ${this.formatFCFA(totaux.totalDep).padStart(14)} ${this.formatFCFA(totaux.balance).padStart(14)}
+${sep}
+`;
+
+        const blob = new Blob(['\uFEFF' + rapport], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        const moisSlug = `${year}-${String(month).padStart(2,'0')}`;
+        link.download = `Winner_Express_Rapport_Mensuel_${modeLabel.replace(' ','_')}_${moisSlug}.txt`;
+        link.click();
+    }
+
+    downloadMonthlyReportPDF() {
+        const year  = parseInt(document.getElementById('report-year').value);
+        const month = parseInt(document.getElementById('report-month').value);
+        if (!year || !month) return;
+
+        const { days, totaux } = this._getMonthStats(year, month);
+        const moisNom   = new Date(year, month - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        const modeLabel = this.currentMode === 'utb' ? 'UTB' : 'Clients Généraux';
+
+        if (days.length === 0) {
+            alert(`Aucune donnée pour ${moisNom} — ${modeLabel}`);
+            return;
+        }
+
+        // Formateur sans espace insécable (évite les slashes dans jsPDF)
+        const fmt = (v) => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+        const isUTB     = this.currentMode === 'utb';
+        const colorMain = isUTB ? [234, 88, 12] : [16, 185, 129];   // orange-600 / emerald-500
+        const colorDark = isUTB ? [154, 52, 18]  : [4, 120, 87];
+
+        // ── En-tête ──────────────────────────────────────────────────────────
+        doc.setFillColor(...colorMain);
+        doc.rect(0, 0, 297, 28, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text('WINNER EXPRESS', 14, 11);
+
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Rapport Mensuel — ${modeLabel}`, 14, 19);
+
+        doc.setFontSize(10);
+        doc.text(`Période : ${moisNom.toUpperCase()}`, 14, 25.5);
+
+        // Date de génération (coin droit)
+        const heure = new Date().toLocaleString('fr-FR');
+        doc.setFontSize(8);
+        doc.text(`Généré le ${heure}`, 297 - 14, 25.5, { align: 'right' });
+
+        // ── Bande KPIs ───────────────────────────────────────────────────────
+        const kpiY = 34;
+        const kpis = [
+            { label: 'Jours actifs',    value: String(days.length),              bg: [239,246,255], border: [147,197,253] },
+            { label: 'Livraisons',      value: String(totaux.totalLiv),           bg: [240,253,244], border: [134,239,172] },
+            { label: 'Recettes Nettes', value: fmt(totaux.net),       bg: [240,253,244], border: [134,239,172] },
+            { label: 'Dépenses',        value: fmt(totaux.totalDep),  bg: [255,241,242], border: [252,165,165] },
+            { label: 'Bénéfice Net',    value: fmt(totaux.balance),   bg: totaux.balance >= 0 ? [240,253,244] : [255,241,242], border: totaux.balance >= 0 ? [134,239,172] : [252,165,165] },
+        ];
+
+        const kpiW = (297 - 28 - 4 * 4) / 5;
+        kpis.forEach((k, i) => {
+            const x = 14 + i * (kpiW + 4);
+            doc.setFillColor(...k.bg);
+            doc.setDrawColor(...k.border);
+            doc.roundedRect(x, kpiY, kpiW, 16, 2, 2, 'FD');
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'bold');
+            doc.text(k.label.toUpperCase(), x + kpiW / 2, kpiY + 5, { align: 'center' });
+            doc.setTextColor(30, 30, 30);
+            doc.setFontSize(9);
+            doc.text(k.value, x + kpiW / 2, kpiY + 12, { align: 'center' });
+        });
+
+        // ── Tableau ───────────────────────────────────────────────────────────
+        const tableRows = days.map(d => {
+            const dateFr = new Date(d.dateStr + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+            return [
+                dateFr,
+                d.totalLiv,
+                d.totalEch,
+                d.totalLiv - d.totalEch,
+                fmt(d.brut),
+                fmt(d.net),
+                fmt(d.totalDep),
+                fmt(d.balance)
+            ];
+        });
+
+        tableRows.push([
+            { content: `TOTAL (${days.length} jours)`, styles: { fontStyle: 'bold' } },
+            { content: totaux.totalLiv, styles: { fontStyle: 'bold' } },
+            { content: totaux.totalEch, styles: { fontStyle: 'bold', textColor: [220,38,38] } },
+            { content: totaux.totalLiv - totaux.totalEch, styles: { fontStyle: 'bold' } },
+            { content: fmt(totaux.brut), styles: { fontStyle: 'bold' } },
+            { content: fmt(totaux.net), styles: { fontStyle: 'bold', textColor: [22,163,74] } },
+            { content: fmt(totaux.totalDep), styles: { fontStyle: 'bold', textColor: [220,38,38] } },
+            { content: fmt(totaux.balance), styles: { fontStyle: 'bold', textColor: totaux.balance >= 0 ? [22,163,74] : [220,38,38] } },
+        ]);
+
+        doc.autoTable({
+            startY: kpiY + 22,
+            head: [['Date', 'Livraisons', 'Échecs', 'Réussies', 'Brutes', 'Nettes', 'Dépenses', 'Bénéfice']],
+            body: tableRows,
+            theme: 'grid',
+            styles: { fontSize: 8, cellPadding: 2.5, textColor: [50, 50, 50] },
+            headStyles: { fillColor: colorDark, textColor: [255,255,255], fontStyle: 'bold', halign: 'center' },
+            columnStyles: {
+                0: { halign: 'left' },
+                1: { halign: 'center' }, 2: { halign: 'center' }, 3: { halign: 'center' },
+                4: { halign: 'right'  }, 5: { halign: 'right'  }, 6: { halign: 'right' }, 7: { halign: 'right' }
+            },
+            alternateRowStyles: { fillColor: [249, 250, 251] },
+            didParseCell: (data) => {
+                if (data.section === 'body' && data.column.index === 7 && data.row.index < days.length) {
+                    const bal = days[data.row.index].balance;
+                    data.cell.styles.textColor = bal >= 0 ? [22,163,74] : [220,38,38];
+                    data.cell.styles.fontStyle = 'bold';
+                }
+            }
+        });
+
+        // ── Pied de page ─────────────────────────────────────────────────────
+        const pageH = doc.internal.pageSize.height;
+        doc.setFillColor(...colorMain);
+        doc.rect(0, pageH - 10, 297, 10, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(7);
+        doc.text('WINNER EXPRESS — Rapport confidentiel', 14, pageH - 3.5);
+        doc.text(`${moisNom} • ${modeLabel}`, 297 - 14, pageH - 3.5, { align: 'right' });
+
+        const moisSlug = `${year}-${String(month).padStart(2,'0')}`;
+        doc.save(`Winner_Express_Rapport_${modeLabel.replace(' ','_')}_${moisSlug}.pdf`);
+    }
+
+    // ─── Sync Firebase Livreurs ───────────────────────────────────────────────
+
+    async loadLivreursFromFirebase() {
+        // Attendre que Firebase Auth soit prêt (jusqu'à 10 secondes)
+        const user = await new Promise((resolve) => {
+            if (auth.currentUser) { resolve(auth.currentUser); return; }
+            let tries = 0;
+            const interval = setInterval(() => {
+                tries++;
+                if (auth.currentUser) { clearInterval(interval); resolve(auth.currentUser); }
+                else if (tries >= 20) { clearInterval(interval); resolve(null); }
+            }, 500);
+        });
+
+        if (!user) {
+            console.warn('⚠️ loadLivreursFromFirebase : aucun utilisateur Firebase après 10s');
+            return;
+        }
+
+        try {
+            console.log('🔄 Chargement livreurs depuis Firebase pour', user.email);
+            const doc = await db.collection('users').doc(user.uid).get();
+            if (!doc.exists) { console.log('📭 Aucun document Firebase pour cet utilisateur'); return; }
+
+            const data = doc.data();
+            console.log('📥 Champs livreurs dans Firebase:', Object.keys(data).filter(k => k.startsWith('livreur')));
+
+            if (data.livreursList) {
+                localStorage.setItem('livreursList', JSON.stringify(data.livreursList));
+                console.log('✅ livreursList chargé :', data.livreursList.length, 'livreurs');
+            }
+            if (data.livreursDailyData) {
+                const local = JSON.parse(localStorage.getItem('livreursDailyData')) || {};
+                localStorage.setItem('livreursDailyData', JSON.stringify({ ...local, ...data.livreursDailyData }));
+                console.log('✅ livreursDailyData chargé :', Object.keys(data.livreursDailyData).length, 'jours');
+            }
+            if (data.livreursPrimes) {
+                const local = JSON.parse(localStorage.getItem('livreursPrimes')) || {};
+                localStorage.setItem('livreursPrimes', JSON.stringify({ ...local, ...data.livreursPrimes }));
+            }
+
+            this.renderLivreursList();
+            this.renderLivreursDailyTable();
+        } catch (e) {
+            console.error('❌ Erreur chargement livreurs Firebase:', e);
+        }
+    }
+
+    async syncLivreursToFirebase() {
+        const user = await new Promise((resolve) => {
+            if (auth.currentUser) { resolve(auth.currentUser); return; }
+            let tries = 0;
+            const interval = setInterval(() => {
+                tries++;
+                if (auth.currentUser) { clearInterval(interval); resolve(auth.currentUser); }
+                else if (tries >= 20) { clearInterval(interval); resolve(null); }
+            }, 500);
+        });
+
+        if (!user) { console.error('❌ Sync livreurs impossible : utilisateur non connecté après 10s'); return; }
+
+        try {
+            const livreurs   = this.getLivreurs();
+            const dailyData  = this.getLivreursDailyData();
+            const primes     = this.getLivreursPrimes();
+
+            console.log('🔄 Sync livreurs vers Firebase — livreurs:', livreurs.length, '| jours:', Object.keys(dailyData).length);
+
+            await db.collection('users').doc(user.uid).set({
+                livreursList:      livreurs,
+                livreursDailyData: dailyData,
+                livreursPrimes:    primes,
+                lastSync:          new Date().toISOString()
+            }, { merge: true });
+
+            console.log('✅ Livreurs synchronisés vers Firebase avec succès');
+            this.showSyncStatus();
+        } catch (error) {
+            console.error('❌ Erreur sync livreurs Firebase:', error);
+            alert('Erreur de synchronisation livreurs : ' + error.message);
+        }
+    }
+
+    // ─── Gestion Livreurs ─────────────────────────────────────────────────────
+
+    getLivreurs() {
+        return JSON.parse(localStorage.getItem('livreursList')) || [];
+    }
+
+    saveLivreurs(list) {
+        localStorage.setItem('livreursList', JSON.stringify(list));
+    }
+
+    getLivreursDailyData() {
+        return JSON.parse(localStorage.getItem('livreursDailyData')) || {};
+    }
+
+    saveLivreursDailyData(data) {
+        localStorage.setItem('livreursDailyData', JSON.stringify(data));
+    }
+
+    getLivreursPrimes() {
+        return JSON.parse(localStorage.getItem('livreursPrimes')) || {};
+    }
+
+    saveLivreursPrimes(data) {
+        localStorage.setItem('livreursPrimes', JSON.stringify(data));
+    }
+
+    async addLivreur() {
+        const input = document.getElementById('new-livreur-nom');
+        const nom = input.value.trim();
+        if (!nom) return;
+        const livreurs = this.getLivreurs();
+        livreurs.push({ id: 'liv_' + Date.now(), nom, actif: true });
+        this.saveLivreurs(livreurs);
+        input.value = '';
+        this.renderLivreursList();
+        this.renderLivreursDailyTable();
+        await this.syncLivreursToFirebase();
+    }
+
+    toggleLivreur(id) {
+        const livreurs = this.getLivreurs();
+        const l = livreurs.find(l => l.id === id);
+        if (l) { l.actif = !l.actif; this.saveLivreurs(livreurs); }
+        this.renderLivreursList();
+        this.renderLivreursDailyTable();
+    }
+
+    async deleteLivreur(id) {
+        if (!confirm('Supprimer ce livreur définitivement ?')) return;
+        this.saveLivreurs(this.getLivreurs().filter(l => l.id !== id));
+        this.renderLivreursList();
+        this.renderLivreursDailyTable();
+        await this.syncLivreursToFirebase();
+    }
+
+    renderLivreursList() {
+        const container = document.getElementById('livreurs-list');
+        const countEl   = document.getElementById('livreurs-count');
+        if (!container) return;
+        const livreurs = this.getLivreurs();
+        if (countEl) countEl.textContent = livreurs.filter(l => l.actif).length;
+        if (livreurs.length === 0) {
+            container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">Aucun livreur enregistré</p>';
+            return;
+        }
+        container.innerHTML = livreurs.map(l => `
+            <div class="flex items-center justify-between p-3 rounded-xl bg-gray-50 mb-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:#ede9fe;">
+                        <i class="fas fa-motorcycle text-xs" style="color:#6d28d9;"></i>
+                    </div>
+                    <span class="font-medium text-gray-700 ${l.actif ? '' : 'line-through text-gray-400'}">${l.nom}</span>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <button onclick="dashboard.toggleLivreur('${l.id}')" class="text-xs px-2 py-1 rounded-lg font-semibold ${l.actif ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}">
+                        ${l.actif ? 'Actif' : 'Inactif'}
+                    </button>
+                    <button onclick="dashboard.deleteLivreur('${l.id}')" class="text-red-400 hover:text-red-600 p-1 transition-colors">
+                        <i class="fas fa-trash-alt text-xs"></i>
+                    </button>
+                </div>
+            </div>`).join('');
+    }
+
+    renderLivreursDailyTable() {
+        const container = document.getElementById('livreurs-daily-table');
+        if (!container) return;
+        const date     = document.getElementById('livreur-date')?.value || this.currentDate;
+        const livreurs = this.getLivreurs().filter(l => l.actif);
+        const dayData  = (this.getLivreursDailyData()[date]) || {};
+
+        if (livreurs.length === 0) {
+            container.innerHTML = `<p class="text-gray-400 text-center py-8"><i class="fas fa-motorcycle text-4xl block mb-3 opacity-20"></i>Ajoutez des livreurs pour commencer</p>`;
+            return;
+        }
+
+        container.innerHTML = `
+            <table class="w-full">
+                <thead>
+                    <tr class="text-gray-600 text-sm uppercase" style="background:#f5f3ff;">
+                        <th class="px-4 py-3 text-left rounded-tl-xl">Livreur</th>
+                        <th class="px-4 py-3 text-center">Total</th>
+                        <th class="px-4 py-3 text-center">Livrés</th>
+                        <th class="px-4 py-3 text-center">Retours</th>
+                        <th class="px-4 py-3 text-center rounded-tr-xl">Net</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${livreurs.map(l => {
+                        const d   = dayData[l.id] || { total: 0, livraisons: 0, retours: 0 };
+                        const net = Math.max(0, d.livraisons - d.retours);
+                        return `<tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center" style="background:#ede9fe;">
+                                        <i class="fas fa-motorcycle text-xs" style="color:#6d28d9;"></i>
+                                    </div>
+                                    <span class="font-semibold text-gray-700">${l.nom}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <input type="number" id="tot-day-${l.id}" value="${d.total || 0}" min="0"
+                                    class="input-modern w-20 p-2 rounded-lg text-center text-sm"
+                                    oninput="dashboard.updateLivreurSummary()">
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <input type="number" id="liv-day-${l.id}" value="${d.livraisons}" min="0"
+                                    class="input-modern w-20 p-2 rounded-lg text-center text-sm"
+                                    oninput="dashboard.updateLivreurSummary()">
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <input type="number" id="ret-day-${l.id}" value="${d.retours}" min="0"
+                                    class="input-modern w-20 p-2 rounded-lg text-center text-sm"
+                                    oninput="dashboard.updateLivreurSummary()">
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span id="net-day-${l.id}" class="font-bold text-lg" style="color:#6d28d9;">${net}</span>
+                            </td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>`;
+        this.updateLivreurSummary();
+    }
+
+    updateLivreurSummary() {
+        const livreurs = this.getLivreurs().filter(l => l.actif);
+        let totalTot = 0, totalLiv = 0, totalRet = 0;
+        livreurs.forEach(l => {
+            const tot = parseInt(document.getElementById(`tot-day-${l.id}`)?.value) || 0;
+            const liv = parseInt(document.getElementById(`liv-day-${l.id}`)?.value) || 0;
+            const ret = parseInt(document.getElementById(`ret-day-${l.id}`)?.value) || 0;
+            const net = Math.max(0, liv - ret);
+            const netEl = document.getElementById(`net-day-${l.id}`);
+            if (netEl) netEl.textContent = net;
+            totalTot += tot;
+            totalLiv += liv;
+            totalRet += ret;
+        });
+        const sumLiv = document.getElementById('sum-livraisons');
+        const sumRet = document.getElementById('sum-retours');
+        const sumNet = document.getElementById('sum-net');
+        if (sumLiv) sumLiv.textContent = totalLiv;
+        if (sumRet) sumRet.textContent = totalRet;
+        if (sumNet) sumNet.textContent = Math.max(0, totalLiv - totalRet);
+    }
+
+    async saveLivreurDay() {
+        const date = document.getElementById('livreur-date')?.value;
+        if (!date) return;
+        const livreurs = this.getLivreurs().filter(l => l.actif);
+        const allData  = this.getLivreursDailyData();
+        const dayData  = {};
+        livreurs.forEach(l => {
+            const tot = parseInt(document.getElementById(`tot-day-${l.id}`)?.value) || 0;
+            const liv = parseInt(document.getElementById(`liv-day-${l.id}`)?.value) || 0;
+            const ret = parseInt(document.getElementById(`ret-day-${l.id}`)?.value) || 0;
+            dayData[l.id] = { total: tot, livraisons: liv, retours: ret };
+        });
+        allData[date] = dayData;
+        this.saveLivreursDailyData(allData);
+        await this.syncLivreursToFirebase();
+    }
+
+    // ─── Rapport mensuel livreurs ─────────────────────────────────────────────
+
+    showLivreurMonthlyModal() {
+        const modal = document.getElementById('livreur-monthly-modal');
+        const now   = new Date();
+        document.getElementById('lrep-year').value  = now.getFullYear();
+        document.getElementById('lrep-month').value = now.getMonth() + 1;
+        document.getElementById('livreur-report-table').innerHTML = `
+            <p class="text-gray-400 text-center py-12">
+                <i class="fas fa-motorcycle text-4xl block mb-3 opacity-20"></i>
+                Sélectionnez un mois et cliquez sur "Afficher"
+            </p>`;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        this._escLivreur = (e) => { if (e.key === 'Escape') this.closeLivreurModal(); };
+        document.addEventListener('keydown', this._escLivreur);
+    }
+
+    closeLivreurModal() {
+        const modal = document.getElementById('livreur-monthly-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        if (this._escLivreur) { document.removeEventListener('keydown', this._escLivreur); this._escLivreur = null; }
+    }
+
+    _getLivreurMonthStats(year, month) {
+        const allData  = this.getLivreursDailyData();
+        const livreurs = this.getLivreurs();
+        const daysInMonth = new Date(year, month, 0).getDate();
+        // Accumulateurs par livreur
+        const stats = {};
+        livreurs.forEach(l => { stats[l.id] = { nom: l.nom, total: 0, livraisons: 0, retours: 0 }; });
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const dayData = allData[dateStr];
+            if (!dayData) continue;
+            livreurs.forEach(l => {
+                const entry = dayData[l.id];
+                if (entry) {
+                    stats[l.id].total      += parseInt(entry.total)      || 0;
+                    stats[l.id].livraisons += parseInt(entry.livraisons) || 0;
+                    stats[l.id].retours    += parseInt(entry.retours)    || 0;
+                }
+            });
+        }
+        return livreurs.map(l => ({ ...stats[l.id], id: l.id, net: Math.max(0, stats[l.id].livraisons - stats[l.id].retours) }));
+    }
+
+    generateLivreurPreview() {
+        const year  = parseInt(document.getElementById('lrep-year').value);
+        const month = parseInt(document.getElementById('lrep-month').value);
+        if (!year || !month) return;
+
+        const stats    = this._getLivreurMonthStats(year, month);
+        const moisNom  = new Date(year, month - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        const primes   = this.getLivreursPrimes();
+        const monthKey = `${year}-${String(month).padStart(2,'0')}`;
+        const savedPrimes = primes[monthKey] || {};
+
+        const hasData = stats.some(s => s.livraisons > 0);
+
+        const container = document.getElementById('livreur-report-table');
+        if (!hasData) {
+            container.innerHTML = `<p class="text-gray-400 text-center py-12"><i class="fas fa-inbox text-4xl block mb-3 opacity-20"></i>Aucune donnée pour ${moisNom}</p>`;
+            return;
+        }
+
+        const totalLiv = stats.reduce((a, s) => a + s.livraisons, 0);
+        const totalRet = stats.reduce((a, s) => a + s.retours,    0);
+        const totalNet = stats.reduce((a, s) => a + s.net,        0);
+
+        container.innerHTML = `
+            <h3 class="text-sm font-bold text-gray-600 mb-3">${moisNom.toUpperCase()} — Saisissez les primes puis cliquez "Sauver primes"</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-xs uppercase text-white" style="background:#6d28d9;">
+                            <th class="px-4 py-3 text-left rounded-tl-lg">Livreur</th>
+                            <th class="px-4 py-3 text-center">Total</th>
+                            <th class="px-4 py-3 text-center">Livrés</th>
+                            <th class="px-4 py-3 text-center">Retours</th>
+                            <th class="px-4 py-3 text-center">Net</th>
+                            <th class="px-4 py-3 text-center rounded-tr-lg">Prime (FCFA)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${stats.map(s => `
+                        <tr class="border-b border-gray-100 hover:bg-purple-50 transition-colors">
+                            <td class="px-4 py-3 font-semibold text-gray-700">
+                                <i class="fas fa-motorcycle mr-2 text-xs" style="color:#6d28d9;"></i>${s.nom}
+                            </td>
+                            <td class="px-4 py-3 text-center text-gray-600">${s.total}</td>
+                            <td class="px-4 py-3 text-center text-gray-600">${s.livraisons}</td>
+                            <td class="px-4 py-3 text-center text-red-500">${s.retours}</td>
+                            <td class="px-4 py-3 text-center font-bold" style="color:#6d28d9;">${s.net}</td>
+                            <td class="px-4 py-3 text-center">
+                                <input type="number" id="prime-${s.id}" value="${savedPrimes[s.id] || ''}"
+                                    class="input-modern w-32 p-2 rounded-lg text-center text-sm" placeholder="0">
+                            </td>
+                        </tr>`).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr class="font-bold bg-gray-50 border-t-2 border-gray-300">
+                            <td class="px-4 py-3 text-gray-800">TOTAL</td>
+                            <td class="px-4 py-3 text-center text-gray-700">${stats.reduce((a,s)=>a+s.total,0)}</td>
+                            <td class="px-4 py-3 text-center text-gray-700">${totalLiv}</td>
+                            <td class="px-4 py-3 text-center text-red-600">${totalRet}</td>
+                            <td class="px-4 py-3 text-center" style="color:#6d28d9;">${totalNet}</td>
+                            <td class="px-4 py-3 text-center text-gray-400 text-xs italic">saisie manuelle</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>`;
+
+        // Stocker pour download
+        this._livreurReportCache = { year, month, moisNom, stats, monthKey };
+    }
+
+    async saveLivreurPrimes() {
+        if (!this._livreurReportCache) return;
+        const { stats, monthKey } = this._livreurReportCache;
+        const primes    = this.getLivreursPrimes();
+        const monthData = {};
+        stats.forEach(s => {
+            const val = parseFloat(document.getElementById(`prime-${s.id}`)?.value) || 0;
+            monthData[s.id] = val;
+        });
+        primes[monthKey] = monthData;
+        this.saveLivreursPrimes(primes);
+        await this.syncLivreursToFirebase();
+    }
+
+    downloadLivreurReportPDF() {
+        if (!this._livreurReportCache) { alert('Cliquez d\'abord sur "Afficher"'); return; }
+        const { year, month, moisNom, stats, monthKey } = this._livreurReportCache;
+        const primes = (this.getLivreursPrimes()[monthKey]) || {};
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const fmt = (v) => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
+
+        // En-tête
+        doc.setFillColor(109, 40, 217);
+        doc.rect(0, 0, 210, 28, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+        doc.text('WINNER EXPRESS', 14, 11);
+        doc.setFontSize(11); doc.setFont('helvetica', 'normal');
+        doc.text('Rapport Mensuel — Livreurs', 14, 19);
+        doc.setFontSize(9);
+        doc.text(`Periode : ${moisNom.toUpperCase()}`, 14, 25.5);
+        doc.text(`Genere le ${new Date().toLocaleString('fr-FR')}`, 210 - 14, 25.5, { align: 'right' });
+
+        // Tableau
+        const totalPrime = stats.reduce((a, s) => a + (primes[s.id] || 0), 0);
+        const rows = stats.map(s => [
+            s.nom,
+            s.total,
+            s.livraisons,
+            s.retours,
+            s.net,
+            primes[s.id] ? fmt(primes[s.id]) : '-'
+        ]);
+        rows.push([
+            { content: 'TOTAL', styles: { fontStyle: 'bold' } },
+            { content: stats.reduce((a,s)=>a+s.total,0), styles: { fontStyle: 'bold' } },
+            { content: stats.reduce((a,s)=>a+s.livraisons,0), styles: { fontStyle: 'bold' } },
+            { content: stats.reduce((a,s)=>a+s.retours,0), styles: { fontStyle: 'bold', textColor:[220,38,38] } },
+            { content: stats.reduce((a,s)=>a+s.net,0), styles: { fontStyle: 'bold', textColor:[109,40,217] } },
+            { content: fmt(totalPrime), styles: { fontStyle: 'bold', textColor:[22,163,74] } }
+        ]);
+
+        doc.autoTable({
+            startY: 35,
+            head: [['Livreur', 'Total', 'Livres', 'Retours', 'Net', 'Prime']],
+            body: rows,
+            theme: 'grid',
+            styles: { fontSize: 10, cellPadding: 3, textColor: [50,50,50] },
+            headStyles: { fillColor: [109,40,217], textColor: [255,255,255], fontStyle: 'bold', halign: 'center' },
+            columnStyles: {
+                0: { halign: 'left' },
+                1: { halign: 'center' }, 2: { halign: 'center' },
+                3: { halign: 'center' }, 4: { halign: 'center' }, 5: { halign: 'right' }
+            },
+            alternateRowStyles: { fillColor: [245,243,255] },
+        });
+
+        // Pied
+        const ph = doc.internal.pageSize.height;
+        doc.setFillColor(109, 40, 217);
+        doc.rect(0, ph - 10, 210, 10, 'F');
+        doc.setTextColor(255,255,255); doc.setFontSize(7);
+        doc.text('WINNER EXPRESS — Confidentiel', 14, ph - 3.5);
+        doc.text(`${moisNom} • Livreurs`, 210 - 14, ph - 3.5, { align: 'right' });
+
+        doc.save(`Winner_Express_Livreurs_${year}-${String(month).padStart(2,'0')}.pdf`);
+    }
+
+    downloadLivreurReportTxt() {
+        if (!this._livreurReportCache) { alert('Cliquez d\'abord sur "Afficher"'); return; }
+        const { year, month, moisNom, stats, monthKey } = this._livreurReportCache;
+        const primes = (this.getLivreursPrimes()[monthKey]) || {};
+        const fmt    = (v) => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
+        const sep    = '='.repeat(55);
+        const line   = '-'.repeat(55);
+        const heure  = new Date().toLocaleTimeString('fr-FR');
+
+        let txt = `${sep}\n   RAPPORT MENSUEL LIVREURS — WINNER EXPRESS\n   Periode : ${moisNom.toUpperCase()}\n   Genere le : ${new Date().toLocaleDateString('fr-FR')} a ${heure}\n${sep}\n\n`;
+        txt += `${'Livreur'.padEnd(20)} ${'Total'.padStart(6)} ${'Livr.'.padStart(6)} ${'Ret.'.padStart(6)} ${'Net'.padStart(6)} ${'Prime'.padStart(14)}\n${line}\n`;
+        stats.forEach(s => {
+            const prime = primes[s.id] ? fmt(primes[s.id]) : '-';
+            txt += `${s.nom.padEnd(20)} ${String(s.total).padStart(6)} ${String(s.livraisons).padStart(6)} ${String(s.retours).padStart(6)} ${String(s.net).padStart(6)} ${prime.padStart(14)}\n`;
+        });
+        const totalPrime = stats.reduce((a,s)=>a+(primes[s.id]||0), 0);
+        txt += `${line}\n${'TOTAL'.padEnd(20)} ${String(stats.reduce((a,s)=>a+s.total,0)).padStart(6)} ${String(stats.reduce((a,s)=>a+s.livraisons,0)).padStart(6)} ${String(stats.reduce((a,s)=>a+s.retours,0)).padStart(6)} ${String(stats.reduce((a,s)=>a+s.net,0)).padStart(6)} ${fmt(totalPrime).padStart(14)}\n${sep}\n`;
+
+        const blob = new Blob(['\uFEFF' + txt], { type: 'text/plain;charset=utf-8' });
+        const a    = document.createElement('a');
+        a.href     = URL.createObjectURL(blob);
+        a.download = `Winner_Express_Livreurs_${year}-${String(month).padStart(2,'0')}.txt`;
+        a.click();
     }
 
     generateTestData() {
