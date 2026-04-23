@@ -1679,6 +1679,13 @@ ${sep}
             this.renderLivreursDailyTable();
         } catch (e) {
             console.error('❌ Erreur chargement livreurs Firebase:', e);
+            
+            // Si c'est une erreur de permissions, on continue en mode local
+            if (e.code === 'permission-denied' || e.message.includes('Missing or insufficient permissions')) {
+                console.warn('⚠️ Permissions Firebase insuffisantes, chargement livreurs en mode local uniquement');
+                // Ne pas afficher d'alerte, continuer en mode local
+                return;
+            }
         }
     }
 
@@ -1713,6 +1720,15 @@ ${sep}
             this.showSyncStatus();
         } catch (error) {
             console.error('❌ Erreur sync livreurs Firebase:', error);
+            
+            // Si c'est une erreur de permissions, on continue en mode local
+            if (error.code === 'permission-denied' || error.message.includes('Missing or insufficient permissions')) {
+                console.warn('⚠️ Permissions Firebase insuffisantes, sauvegarde livreurs locale uniquement');
+                // Ne pas afficher d'alerte, continuer en mode local
+                this.showSyncStatus(); // Montrer que la sauvegarde locale a fonctionné
+                return;
+            }
+            
             alert('Erreur de synchronisation livreurs : ' + error.message);
         }
     }
