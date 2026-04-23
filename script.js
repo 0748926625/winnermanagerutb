@@ -1820,8 +1820,7 @@ ${sep}
                         <th class="px-4 py-3 text-left rounded-tl-xl">Livreur</th>
                         <th class="px-4 py-3 text-center">Total</th>
                         <th class="px-4 py-3 text-center">Livrés</th>
-                        <th class="px-4 py-3 text-center">Retours</th>
-                        <th class="px-4 py-3 text-center rounded-tr-xl">Net</th>
+                        <th class="px-4 py-3 text-center rounded-tr-xl">Retours</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1847,13 +1846,10 @@ ${sep}
                                     class="input-modern w-20 p-2 rounded-lg text-center text-sm"
                                     oninput="dashboard.updateLivreurSummary()">
                             </td>
-                            <td class="px-4 py-3 text-center">
+                            <td class="px-4 py-3 text-center rounded-tr-xl">
                                 <input type="number" id="ret-day-${l.id}" value="${d.retours}" min="0"
                                     class="input-modern w-20 p-2 rounded-lg text-center text-sm"
                                     oninput="dashboard.updateLivreurSummary()">
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <span id="net-day-${l.id}" class="font-bold text-lg" style="color:#6d28d9;">${net}</span>
                             </td>
                         </tr>`;
                     }).join('')}
